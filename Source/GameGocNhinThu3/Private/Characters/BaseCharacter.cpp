@@ -81,6 +81,15 @@ void ABaseCharacter::I_PlayAttackMontage(UAnimMontage* AttackMontage)
 	PlayAnimMontage(AttackMontage);
 }
 
+void ABaseCharacter::I_PlayAttackingSound()
+{
+	if (BaseCharacterData)
+		UGameplayStatics::PlaySoundAtLocation(
+			this, 
+			BaseCharacterData->AttackingSound, 
+			GetActorLocation());
+}
+
 void ABaseCharacter::I_AN_EndAttack()
 {
 	// Attack Component
@@ -210,15 +219,32 @@ void ABaseCharacter::HandleTakePointDamage(
 		FColor::Cyan,
 		TEXT("Handle Take Point")
 	);*/
+	
+	// Hit Impact effect
+	if (BaseCharacterData == nullptr)
+		return;
+	UGameplayStatics::SpawnEmitterAtLocation(
+		GetWorld(),
+		BaseCharacterData->HitImpactEffect,
+		HitLocation);
+
+	// Play Hit Impact Sound
+	UGameplayStatics::PlaySoundAtLocation(
+		this, 
+		BaseCharacterData->HitImpactSound, 
+		HitLocation);
+
+	// Play Pain Sound, Pain from character -> Actor Location
+	UGameplayStatics::PlaySoundAtLocation(
+		this,
+		BaseCharacterData->PainSound,
+		HitLocation);
 
 	// hit react animation
-	if (BaseCharacterData)
-	{
-		// Get correct react montage
-		PlayAnimMontage(GetCorrectHitReactMontage(ShotFromDirection));
-		//PlayAnimMontage(BaseCharacterData->HitReactMontage);
-		CombatState = ECombatState::Attacked;
-	}
+	// Get correct react montage
+	PlayAnimMontage(GetCorrectHitReactMontage(ShotFromDirection));
+	//PlayAnimMontage(BaseCharacterData->HitReactMontage);
+	CombatState = ECombatState::Attacked;
 		
 }
 

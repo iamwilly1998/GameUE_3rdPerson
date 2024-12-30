@@ -120,7 +120,9 @@ void UAttackComponent::Attack()
 	// Attack Interface 
 	if (AttackInterface && BaseCharacterData && GetCorrectAttackMontage())
 	{
-		AttackInterface->I_PlayAttackMontage(BaseCharacterData->AttackMontages[AttackIndex]);
+		AttackInterface->I_PlayAttackMontage(GetCorrectAttackMontage());
+		// Play attacking sound
+		AttackInterface->I_PlayAttackingSound();
 		bIsAttacking = true;
 		bCanCombo = false;
 		AttackIndex = (AttackIndex +1) % BaseCharacterData->AttackMontages.Num();

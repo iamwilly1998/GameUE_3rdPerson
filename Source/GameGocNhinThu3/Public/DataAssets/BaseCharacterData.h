@@ -7,6 +7,7 @@
 
 #include "BaseCharacterData.generated.h"
 
+class USoundBase;
 /**
  * 
  */
@@ -30,6 +31,18 @@ public:
 	UAnimMontage* HitReactMontage_Left;
 	UPROPERTY(EditDefaultsOnly, Category = "Hit React")
 	UAnimMontage* HitReactMontage_Right;
+
+	// Hit Impact
+	UPROPERTY(EditDefaultsOnly, Category = "Hit Impact")
+	UParticleSystem* HitImpactEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase* HitImpactSound;
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase* PainSound;
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase* AttackingSound;
+
 	// Trace hit
 	UPROPERTY(EditDefaultsOnly, Category = "Trace Hit")
 	TArray<TEnumAsByte<EObjectTypeQuery>> TraceObjectTypes;

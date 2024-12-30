@@ -23,6 +23,7 @@ class GAMEGOCNHINTHU3_API IAttackInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	virtual void I_PlayAttackMontage(UAnimMontage* AttackMontage) = 0;
+	virtual void I_PlayAttackingSound() = 0;
 	virtual void I_AN_EndAttack() = 0; 
 	virtual void I_AN_ComboAttack() = 0;
 	// Getter

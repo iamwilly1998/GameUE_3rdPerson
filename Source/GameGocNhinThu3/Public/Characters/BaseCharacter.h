@@ -30,6 +30,8 @@ public:
 	//virtual void Tick(float DeltaSeconds) override;
 	// Attack Interface
 	virtual void I_PlayAttackMontage(UAnimMontage* AttackMontage) override;
+	virtual void I_PlayAttackingSound() override;
+
 	virtual void I_AN_EndAttack() override;
 	virtual void I_AN_ComboAttack() override;
 	virtual FVector I_GetSocketLocation(const FName& SocketName) const override;
