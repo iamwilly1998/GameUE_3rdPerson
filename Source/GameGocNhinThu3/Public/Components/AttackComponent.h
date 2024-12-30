@@ -25,6 +25,7 @@ public:
 	void TraceHit();
 	void SetupAttackComponent(UBaseCharacterData* BCD);
 	void AN_EndAttack();
+	void AN_ComboAttack();
 	void SetupTraceHit();
 
 protected:
@@ -34,6 +35,7 @@ protected:
 private:
 	void Attack();
 	void HandleHitResult(const FHitResult& Result);
+	UAnimMontage* GetCorrectAttackMontage();
 
 public:
 	FHitSomeThingDelegate HitSomeThingDelegate;
@@ -45,6 +47,9 @@ private:
 	UBaseCharacterData* BaseCharacterData;
 	
 	bool bIsAttacking;
+	bool bCanCombo;
+	bool bSavedAttack;
+	int AttackIndex = 0;
 
 	// Trace hit
 	TArray<AActor*> HittedActors;

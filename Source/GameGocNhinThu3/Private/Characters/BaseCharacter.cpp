@@ -89,6 +89,12 @@ void ABaseCharacter::I_AN_EndAttack()
 		AttackComponent->AN_EndAttack();
 }
 
+void ABaseCharacter::I_AN_ComboAttack()
+{
+	if (AttackComponent)
+		AttackComponent->AN_ComboAttack();
+}
+
 FVector ABaseCharacter::I_GetSocketLocation(const FName& SocketName) const
 {
 	if (GetMesh() == nullptr)

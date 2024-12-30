@@ -25,9 +25,11 @@ void UAttackComponent::BeginPlay()
 
 void UAttackComponent::RequestAttack()
 {
-	if (bIsAttacking)
-		return;
-	Attack();
+	// if not attack and can combo
+	bool bCanAttack = bIsAttacking == false || bCanCombo;
+	if (bCanAttack)
+		Attack();
+	else bSavedAttack = true;
 }
 
 void UAttackComponent::TraceHit()
@@ -104,12 +106,25 @@ void UAttackComponent::HandleHitResult(const FHitResult& Result)
 
 }
 
+UAnimMontage* UAttackComponent::GetCorrectAttackMontage()
+{
+	if (BaseCharacterData == nullptr)
+		return nullptr;
+	if (BaseCharacterData->AttackMontages.IsEmpty())
+		return nullptr;
+	return BaseCharacterData->AttackMontages[AttackIndex];
+}
+
 void UAttackComponent::Attack()
 {
 	// Attack Interface 
-	if (AttackInterface && BaseCharacterData)
-		AttackInterface->I_PlayAttackMontage(BaseCharacterData->AttackMontage);
-	bIsAttacking = true;
+	if (AttackInterface && BaseCharacterData && GetCorrectAttackMontage())
+	{
+		AttackInterface->I_PlayAttackMontage(BaseCharacterData->AttackMontages[AttackIndex]);
+		bIsAttacking = true;
+		bCanCombo = false;
+		AttackIndex = (AttackIndex +1) % BaseCharacterData->AttackMontages.Num();
+	}
 }
 
 void UAttackComponent::SetupAttackComponent(UBaseCharacterData* BCD)
@@ -120,6 +135,19 @@ void UAttackComponent::SetupAttackComponent(UBaseCharacterData* BCD)
 void UAttackComponent::AN_EndAttack()
 {
 	bIsAttacking = false;
+	bCanCombo = false;
+	bSavedAttack = false;
+	AttackIndex = 0;
+}
+
+void UAttackComponent::AN_ComboAttack()
+{
+	bCanCombo = true;
+	if (bSavedAttack)
+	{
+		RequestAttack();
+		bSavedAttack = false;
+	}
 }
 
 void UAttackComponent::SetupTraceHit()

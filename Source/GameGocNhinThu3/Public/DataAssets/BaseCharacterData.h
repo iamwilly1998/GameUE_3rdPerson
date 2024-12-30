@@ -16,8 +16,9 @@ class GAMEGOCNHINTHU3_API UBaseCharacterData : public UDataAsset
 	GENERATED_BODY()
 
 public:
+	// T<Array> to have more than one attack montage
 	UPROPERTY(EditDefaultsOnly, Category = "Attack")
-	UAnimMontage* AttackMontage;
+	TArray<UAnimMontage*> AttackMontages;
 
 	// Hit React Monatge
 
