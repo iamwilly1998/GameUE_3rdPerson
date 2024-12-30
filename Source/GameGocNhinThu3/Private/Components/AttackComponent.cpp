@@ -88,7 +88,7 @@ void UAttackComponent::TraceHit()
 
 void UAttackComponent::HandleHitResult(const FHitResult& Result)
 {
-	// print string
+	// print Bone name
 	if (GEngine)
 		GEngine->AddOnScreenDebugMessage(
 			-1,

@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/AttackInterface.h"
+#include "Enum/CombatState.h"
+
 #include "BaseCharacter.generated.h"
 
 class USpringArmComponent;
@@ -40,6 +42,8 @@ protected:
 	void CharacterAddMappingContext();
 
 private:
+	// Attack Direction
+	UAnimMontage* GetCorrectHitReactMontage(const FVector& AttackDirection) const;
 	void LookAround(const FInputActionValue& Value);
 	void Moving(const FInputActionValue& Value);
 	void AttackPressed();
@@ -60,6 +64,9 @@ private:
 		AActor* DamageCauser);
 
 private:
+
+	ECombatState CombatState = ECombatState::Ready;
+
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* SpringArmComponent;
 
@@ -75,5 +82,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Character Data Assets")
 	UBaseCharacterData* BaseCharacterData;
 
-	
+	// Getter vs Setter
+public:
+	FORCEINLINE
+	ECombatState GetCombatState() const { return CombatState; }
+
 };

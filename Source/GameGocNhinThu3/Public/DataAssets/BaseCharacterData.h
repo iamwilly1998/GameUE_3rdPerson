@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+
 #include "BaseCharacterData.generated.h"
 
 /**
@@ -18,8 +19,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Attack")
 	UAnimMontage* AttackMontage;
 
+	// Hit React Monatge
+
 	UPROPERTY(EditDefaultsOnly, Category = "Hit React")
-	UAnimMontage* HitReactMontage;
+	UAnimMontage* HitReactMontage_Front;
+	UPROPERTY(EditDefaultsOnly, Category = "Hit React")
+	UAnimMontage* HitReactMontage_Back;
+	UPROPERTY(EditDefaultsOnly, Category = "Hit React")
+	UAnimMontage* HitReactMontage_Left;
+	UPROPERTY(EditDefaultsOnly, Category = "Hit React")
+	UAnimMontage* HitReactMontage_Right;
 	// Trace hit
 	UPROPERTY(EditDefaultsOnly, Category = "Trace Hit")
 	TArray<TEnumAsByte<EObjectTypeQuery>> TraceObjectTypes;

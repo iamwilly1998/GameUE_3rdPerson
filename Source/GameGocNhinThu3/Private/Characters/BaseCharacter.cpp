@@ -123,6 +123,7 @@ void ABaseCharacter::CharacterAddMappingContext()
 		Subsystem->AddMappingContext(EnhancedInputData->InputMappingContext, 0);
 }
 
+
 void ABaseCharacter::LookAround(const FInputActionValue& Value)
 {
 	 // Value get X,Y
@@ -186,16 +187,63 @@ void ABaseCharacter::HandleHitSomething(const FHitResult& HitResult)
 		);
 }
 
-void ABaseCharacter::HandleTakePointDamage(AActor* DamagedActor, float Damage, AController* InstigatedBy, FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser)
+void ABaseCharacter::HandleTakePointDamage(
+	AActor* DamagedActor, 
+	float Damage, 
+	AController* InstigatedBy, 
+	FVector HitLocation, 
+	UPrimitiveComponent* FHitComponent, 
+	FName BoneName, 
+	FVector ShotFromDirection, 
+	const UDamageType* DamageType, 
+	AActor* DamageCauser)
 {
-	GEngine->AddOnScreenDebugMessage(
+	/*GEngine->AddOnScreenDebugMessage(
 		-1,
 		1.0f,
 		FColor::Cyan,
 		TEXT("Handle Take Point")
-	);
+	);*/
 
 	// hit react animation
 	if (BaseCharacterData)
-		PlayAnimMontage(BaseCharacterData->HitReactMontage);
+	{
+		// Get correct react montage
+		PlayAnimMontage(GetCorrectHitReactMontage(ShotFromDirection));
+		//PlayAnimMontage(BaseCharacterData->HitReactMontage);
+		CombatState = ECombatState::Attacked;
+	}
+		
+}
+
+UAnimMontage* ABaseCharacter::GetCorrectHitReactMontage(const FVector& AttackDirection) const
+{
+	if (BaseCharacterData == nullptr)
+		return nullptr;
+	// front
+	// back
+	// Use Dot Product to determine front or back
+	// 1 = back , -1 = front
+	const double Dot = FVector::DotProduct(AttackDirection, GetActorForwardVector());
+	/*GEngine->AddOnScreenDebugMessage(
+		-1,
+		1.0f,
+		FColor::Red,
+		FString::Printf(TEXT("DOT = %f"), Dot)
+	);*/
+	bool bShouldUseDot = FMath::Abs(Dot) > 0.5;
+	if (bShouldUseDot)
+	{
+		if (Dot > 0.0)
+			return BaseCharacterData->HitReactMontage_Back;
+		return BaseCharacterData->HitReactMontage_Front;
+	}
+	else
+	{
+		const FVector Cross = FVector::CrossProduct(AttackDirection, GetActorForwardVector());
+		if (Cross.Z > 0.0)
+			return BaseCharacterData->HitReactMontage_Right;
+		return BaseCharacterData->HitReactMontage_Left;
+	}
+	return nullptr;
 }

@@ -7,6 +7,7 @@
 #include "BaseAnimInstance.generated.h"
 
 class UCharacterMovementComponent;
+class ABaseCharacter;
 /**
  * 
  */
@@ -27,7 +28,7 @@ protected:
 
 private:
 	UPROPERTY()
-	ACharacter* Character;
+	ABaseCharacter* Character;
 	UPROPERTY()
 	UCharacterMovementComponent* MovementComponent;
 
