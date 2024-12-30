@@ -5,6 +5,7 @@
 #include "DataAssets/EnhancedInputData.h"
 #include "DataAssets/BaseCharacterData.h"
 #include "Components/AttackComponent.h"
+#include "Components/HealthComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -27,8 +28,9 @@ ABaseCharacter::ABaseCharacter()
 	CameraComponent->SetupAttachment(SpringArmComponent);
 	CameraComponent->bUsePawnControlRotation = false;
 
-	// Attack component
+	// Actor component
 	AttackComponent = CreateDefaultSubobject<UAttackComponent>(TEXT("Attack Component"));
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
 
 	// Prevent character move with controller
 	bUseControllerRotationYaw = false;
@@ -65,6 +67,9 @@ void ABaseCharacter::PostInitializeComponents()
 		AttackComponent->HitSomeThingDelegate.BindDynamic(this, &ABaseCharacter::HandleHitSomething);
 		AttackComponent->SetupAttackComponent(BaseCharacterData);
 	}
+	// Health component
+	if (HealthComponent)
+		HealthComponent->SetupComponent(BaseCharacterData);
 }
 
 // Called when the game starts or when spawned

@@ -10,6 +10,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class UAttackComponent;
+class UHealthComponent;
 class UInputMappingContext;
 class UInputAction;
 class UEnhancedInputData;
@@ -65,6 +66,13 @@ private:
 		FVector ShotFromDirection, 
 		const class UDamageType* DamageType, 
 		AActor* DamageCauser);
+protected:
+
+	UPROPERTY(VisibleAnywhere)
+	UAttackComponent* AttackComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	UHealthComponent* HealthComponent;
 
 private:
 
@@ -75,9 +83,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* CameraComponent;
-
-	UPROPERTY(VisibleAnywhere)
-	UAttackComponent* AttackComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character Data Assets")
 	UEnhancedInputData* EnhancedInputData;
