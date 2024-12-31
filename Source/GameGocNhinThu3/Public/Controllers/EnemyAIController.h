@@ -23,6 +23,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void UpdatePatrolLocation();
+	UFUNCTION(BlueprintCallable)
+	void CheckDistance(AActor* AIACtor, AActor* PlayerActor, float AttackRange);
 
 
 protected:
@@ -31,6 +33,8 @@ protected:
 private:
 	UFUNCTION()
 	void HandleTargetPerceptionUpdate(AActor* Actor, FAIStimulus Stimulus);
+
+	void HandleSeePlayer(AActor* Actor);
 
 private:
 	UPROPERTY()
@@ -45,5 +49,12 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	FName Key_PatrolLocation;
+	UPROPERTY(EditDefaultsOnly)
+	FName Key_IsCombat;
+	UPROPERTY(EditDefaultsOnly)
+	FName Key_PlayerActor;
+	UPROPERTY(EditDefaultsOnly)
+	FName Key_ShouldAttack;
+
 	FLinearColor DebugColor = FLinearColor::Green;
 };

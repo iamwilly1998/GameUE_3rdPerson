@@ -17,6 +17,7 @@ public:
 	// Sets default values for this component's properties
 	UHealthComponent();
 	void SetupComponent(UBaseCharacterData* BCD);
+	void UpdateHealthByDamage(float Damage);
 
 protected:
 	// Called when the game starts

@@ -53,7 +53,7 @@ void UAttackComponent::TraceHit()
 		this,
 		StartLocation,
 		EndLocation,
-		10.0f,
+		BaseCharacterData->TraceRadius,
 		BaseCharacterData->TraceObjectTypes,
 		false,
 		BaseCharacterData->ActorToIgnore,
@@ -62,7 +62,7 @@ void UAttackComponent::TraceHit()
 		true,
 		FLinearColor::Red,
 		FLinearColor::Green,
-		4.0f
+		BaseCharacterData->DrawTime
 	);
 	if (bDoHitSomething == false)
 		return;

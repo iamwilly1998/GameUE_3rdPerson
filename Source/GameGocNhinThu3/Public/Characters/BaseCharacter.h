@@ -7,16 +7,12 @@
 
 #include "BaseCharacter.generated.h"
 
-class USpringArmComponent;
-class UCameraComponent;
+
 class UAttackComponent;
 class UHealthComponent;
-class UInputMappingContext;
-class UInputAction;
 class UEnhancedInputData;
 class UBaseCharacterData;
 
-struct FInputActionValue;
 
 UCLASS()
 class GAMEGOCNHINTHU3_API ABaseCharacter : public ACharacter, public IAttackInterface
@@ -26,10 +22,13 @@ class GAMEGOCNHINTHU3_API ABaseCharacter : public ACharacter, public IAttackInte
 public:
 	// Sets default values for this character's properties
 	ABaseCharacter();
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PostInitializeComponents() override;
 	//virtual void Tick(float DeltaSeconds) override;
+	
+	void ChangeWalkSpeed(float WalkSpeed);
+
 	// Attack Interface
+#pragma region Attack Interface
 	virtual void I_PlayAttackMontage(UAnimMontage* AttackMontage) override;
 	virtual void I_PlayAttackingSound() override;
 
@@ -38,34 +37,34 @@ public:
 	virtual FVector I_GetSocketLocation(const FName& SocketName) const override;
 	virtual void I_ANS_TraceHit() override;
 	virtual void I_ANS_BeginTraceHit() override;
+	virtual void I_RequestAttack() override;
+#pragma endregion
+	
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	void CharacterAddMappingContext();
+	UFUNCTION()
+	virtual void HandleTakePointDamage(
+		AActor* DamagedActor,
+		float Damage,
+		class AController* InstigatedBy,
+		FVector HitLocation,
+		class UPrimitiveComponent* FHitComponent,
+		FName BoneName,
+		FVector ShotFromDirection,
+		const class UDamageType* DamageType,
+		AActor* DamageCauser);
 
 private:
 	// Attack Direction
 	UAnimMontage* GetCorrectHitReactMontage(const FVector& AttackDirection) const;
-	void LookAround(const FInputActionValue& Value);
-	void Moving(const FInputActionValue& Value);
-	void AttackPressed();
 
 	//Event Function
 	UFUNCTION()
 	void HandleHitSomething(const FHitResult& HitResult);
-	UFUNCTION()
-	void HandleTakePointDamage(
-		AActor* DamagedActor, 
-		float Damage, 
-		class AController* InstigatedBy, 
-		FVector HitLocation, 
-		class UPrimitiveComponent* FHitComponent, 
-		FName BoneName, 
-		FVector ShotFromDirection, 
-		const class UDamageType* DamageType, 
-		AActor* DamageCauser);
+	
 protected:
 
 	UPROPERTY(VisibleAnywhere)
@@ -74,21 +73,19 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UHealthComponent* HealthComponent;
 
-private:
+	UPROPERTY(EditDefaultsOnly, Category = "Character Data Assets")
+	UBaseCharacterData* BaseCharacterData;
 
-	ECombatState CombatState = ECombatState::Ready;
-
-	UPROPERTY(VisibleAnywhere)
-	USpringArmComponent* SpringArmComponent;
-
-	UPROPERTY(VisibleAnywhere)
-	UCameraComponent* CameraComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character Data Assets")
 	UEnhancedInputData* EnhancedInputData;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Character Data Assets")
-	UBaseCharacterData* BaseCharacterData;
+private:
+
+	ECombatState CombatState = ECombatState::Ready;
+
+	
+
 
 	// Getter vs Setter
 public:

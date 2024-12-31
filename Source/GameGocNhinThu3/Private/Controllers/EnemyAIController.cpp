@@ -28,9 +28,12 @@ void AEnemyAIController::OnPossess(APawn* InPawn)
 	PossessedPawn = InPawn;
 	EnemyInterface = TScriptInterface<IEnemyInterface>(InPawn);
 
-	//RunBehaviorTree(BehaviorTree);
-	if (AIPerceptionComponent)
+	RunBehaviorTree(BehaviorTree);
+
+	if (AIPerceptionComponent && AIPerceptionComponent->OnTargetPerceptionUpdated.IsBound() == false)
+	{
 		AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyAIController::HandleTargetPerceptionUpdate);
+	}
 }
 
 void AEnemyAIController::Tick(float DeltaSeconds)
@@ -55,9 +58,7 @@ void AEnemyAIController::HandleTargetPerceptionUpdate(AActor* Actor, FAIStimulus
 {
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		if (GEngine)
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, TEXT("I see you"));
-		DebugColor = FLinearColor::Red;
+		HandleSeePlayer(Actor);
 	}
 	else
 	{
@@ -67,6 +68,27 @@ void AEnemyAIController::HandleTargetPerceptionUpdate(AActor* Actor, FAIStimulus
 	}
 }
 
+void AEnemyAIController::HandleSeePlayer(AActor* Actor)
+{
+	DebugColor = FLinearColor::Red;
+	if (EnemyInterface)
+		EnemyInterface->I_HandleSeePlayer(Actor);
+
+	if (Blackboard)
+	{
+		// is combat, bool
+		Blackboard->SetValueAsBool(Key_IsCombat, true);
+		// player actor
+		Blackboard->SetValueAsObject(Key_PlayerActor, Actor);
+	}
+	// Remove Dynamic
+	if (AIPerceptionComponent && AIPerceptionComponent->OnTargetPerceptionUpdated.IsBound())
+	{
+		AIPerceptionComponent->OnTargetPerceptionUpdated.RemoveDynamic(this, &AEnemyAIController::HandleTargetPerceptionUpdate);
+	}
+	
+}
+
 
 void AEnemyAIController::UpdatePatrolLocation()
 {
@@ -74,4 +96,21 @@ void AEnemyAIController::UpdatePatrolLocation()
 		Blackboard->SetValueAsVector(
 			Key_PatrolLocation
 			, EnemyInterface->I_GetTargetLocation());
+}
+
+void AEnemyAIController::CheckDistance(AActor* AIACtor, AActor* PlayerActor, float AttackRange)
+{
+	if (AIACtor == nullptr || PlayerActor == nullptr)
+		return;
+	const auto Distance_AIVsPlayer = AIACtor->GetDistanceTo(PlayerActor);
+	if (Distance_AIVsPlayer <= AttackRange)
+	{
+		if(Blackboard)
+			Blackboard->SetValueAsBool(Key_ShouldAttack, true);
+	}
+	else
+	{
+		if (Blackboard)
+			Blackboard->SetValueAsBool(Key_ShouldAttack, false);
+	}
 }

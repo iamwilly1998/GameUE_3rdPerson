@@ -55,6 +55,10 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Trace Hit")
 	TArray<AActor*> ActorToIgnore;
+	UPROPERTY(EditDefaultsOnly, Category = "Trace Hit")
+	float TraceRadius = 40.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Trace Hit")
+	float DrawTime = 1.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float Damage = 20.0f;
@@ -62,5 +66,13 @@ public:
 	float Health = 100.0f; 
 	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float MaxHealth = 100.0f;
+
+	// Speed
+	UPROPERTY(EditDefaultsOnly, Category = "Speed")
+	float DefaultSpeed = 600.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Speed")
+	float CombatSpeed = 400.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Speed")
+	float PatrolSpeed = 300.0f;
 	
 };
