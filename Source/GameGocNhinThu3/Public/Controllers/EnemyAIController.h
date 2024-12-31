@@ -25,7 +25,7 @@ public:
 	void UpdatePatrolLocation();
 	UFUNCTION(BlueprintCallable)
 	void CheckDistance(AActor* AIACtor, AActor* PlayerActor, float AttackRange);
-
+	void BackToPatrol();
 
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
@@ -35,6 +35,8 @@ private:
 	void HandleTargetPerceptionUpdate(AActor* Actor, FAIStimulus Stimulus);
 
 	void HandleSeePlayer(AActor* Actor);
+
+	void ExitCombatTimerFinished();
 
 private:
 	UPROPERTY()
@@ -50,11 +52,14 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	FName Key_PatrolLocation;
 	UPROPERTY(EditDefaultsOnly)
-	FName Key_IsCombat;
-	UPROPERTY(EditDefaultsOnly)
 	FName Key_PlayerActor;
 	UPROPERTY(EditDefaultsOnly)
-	FName Key_ShouldAttack;
+	FName Key_AIState;
 
 	FLinearColor DebugColor = FLinearColor::Green;
+
+	FTimerHandle ExitCombatTimer;
+
+	UPROPERTY(EditDefaultsOnly)
+	float ExitCombatSecond = 3.0f;
 };

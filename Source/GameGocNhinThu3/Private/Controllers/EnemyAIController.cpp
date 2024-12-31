@@ -7,6 +7,7 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Enum/AIState.h"
 
 
 AEnemyAIController::AEnemyAIController()
@@ -77,7 +78,7 @@ void AEnemyAIController::HandleSeePlayer(AActor* Actor)
 	if (Blackboard)
 	{
 		// is combat, bool
-		Blackboard->SetValueAsBool(Key_IsCombat, true);
+		Blackboard->SetValueAsEnum(Key_AIState, (uint8)EAIState::Combat);
 		// player actor
 		Blackboard->SetValueAsObject(Key_PlayerActor, Actor);
 	}
@@ -89,7 +90,6 @@ void AEnemyAIController::HandleSeePlayer(AActor* Actor)
 	
 }
 
-
 void AEnemyAIController::UpdatePatrolLocation()
 {
 	if (Blackboard && EnemyInterface)
@@ -100,17 +100,45 @@ void AEnemyAIController::UpdatePatrolLocation()
 
 void AEnemyAIController::CheckDistance(AActor* AIACtor, AActor* PlayerActor, float AttackRange)
 {
+	if (PlayerActor == nullptr)
+	{
+		BackToPatrol();
+		return;
+	}
+
 	if (AIACtor == nullptr || PlayerActor == nullptr)
 		return;
 	const auto Distance_AIVsPlayer = AIACtor->GetDistanceTo(PlayerActor);
 	if (Distance_AIVsPlayer <= AttackRange)
 	{
 		if(Blackboard)
-			Blackboard->SetValueAsBool(Key_ShouldAttack, true);
-	}
-	else
+			Blackboard->SetValueAsEnum(Key_AIState, (uint8)EAIState::Attack);
+		}
+		else
 	{
 		if (Blackboard)
-			Blackboard->SetValueAsBool(Key_ShouldAttack, false);
+			Blackboard->SetValueAsEnum(Key_AIState, (uint8)EAIState::Combat);
+	}
+}
+
+void AEnemyAIController::BackToPatrol()
+{
+	if (Blackboard)
+		Blackboard->SetValueAsEnum(Key_AIState, (uint8)EAIState::Patrol);
+	DebugColor = FLinearColor::Gray;
+
+	GetWorldTimerManager().SetTimer(
+		ExitCombatTimer, 
+		this, 
+		&AEnemyAIController::ExitCombatTimerFinished, 
+		ExitCombatSecond);
+}
+
+void AEnemyAIController::ExitCombatTimerFinished()
+{
+	DebugColor = FLinearColor::Green;
+	if (AIPerceptionComponent && AIPerceptionComponent->OnTargetPerceptionUpdated.IsBound() == false)
+	{
+		AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyAIController::HandleTargetPerceptionUpdate);
 	}
 }

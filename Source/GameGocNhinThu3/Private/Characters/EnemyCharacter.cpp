@@ -5,6 +5,7 @@
 #include "Interfaces/AttackInterface.h"
 #include "Components/HealthComponent.h"
 #include "DataAssets/BaseCharacterData.h"
+#include "Controllers/EnemyAIController.h"
 
 
 FVector AEnemyCharacter::I_GetTargetLocation()
@@ -20,15 +21,32 @@ FVector AEnemyCharacter::I_GetTargetLocation()
 
 void AEnemyCharacter::I_HandleSeePlayer(AActor* PlayerActor)
 {
+
+	// Reduce walk speed when combat
+	if (BaseCharacterData)
+		ChangeWalkSpeed(BaseCharacterData->CombatSpeed);
+
 	// attack interface
 	// enter combat
 	// health/max health
 	AttackInterface_Player = TScriptInterface<IAttackInterface>(PlayerActor);
+
+	if (AttackInterface_Player == nullptr)
+		return;
+
 	if (AttackInterface_Player && HealthComponent)
 		AttackInterface_Player->I_EnterCombat(HealthComponent->Health, HealthComponent->MaxHealth);
-	// Reduce walk speed when combat
-	if(BaseCharacterData)
-		ChangeWalkSpeed(BaseCharacterData->CombatSpeed);
+
+	if (AttackInterface_Player->I_OnExitCombat.IsBound() == false)
+		AttackInterface_Player->I_OnExitCombat.BindDynamic(this, &AEnemyCharacter::HandlePlayerExitCombat);
+}
+
+void AEnemyCharacter::Destroyed()
+{
+	if (AttackInterface_Player)
+		AttackInterface_Player->I_HandleTargetDestroyed();
+	Super::Destroyed();
+
 }
 
 void AEnemyCharacter::BeginPlay()
@@ -43,4 +61,21 @@ void AEnemyCharacter::HandleTakePointDamage(AActor* DamagedActor, float Damage, 
 	Super::HandleTakePointDamage(DamagedActor, Damage, InstigatedBy, HitLocation, FHitComponent, BoneName, ShotFromDirection, DamageType, DamageCauser);
 	if (AttackInterface_Player && HealthComponent)
 		AttackInterface_Player->I_HitTarget(HealthComponent->Health, HealthComponent->MaxHealth);
+}
+
+void AEnemyCharacter::HandleDead()
+{
+	Super::HandleDead();
+	// Stop behavior tree
+	// Remove controller
+	DetachFromControllerPendingDestroy();
+}
+
+void AEnemyCharacter::HandlePlayerExitCombat()
+{
+	// change to patrol
+	// AI state -> patrol
+	auto EnemyAIController = Cast<AEnemyAIController>(GetController());
+	if (EnemyAIController)
+		EnemyAIController->BackToPatrol();
 }

@@ -10,6 +10,9 @@ void UPlayerWidget::UpdateHealthBar_Player(float Health, float MaxHealth)
 	// Progress bar
 	if (HealthBar_Player)
 		HealthBar_Player->SetPercent(Health / MaxHealth);
+	// Update UTextBlock
+	FString HealthString = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Health), FMath::CeilToInt(MaxHealth));
+	HealthText_Player->SetText(FText::FromString(HealthString));
 }
 
 void UPlayerWidget::UpdateHealthBar_Enemy(float Health, float MaxHealth)

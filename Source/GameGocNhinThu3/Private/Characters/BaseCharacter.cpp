@@ -5,6 +5,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/AttackComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
 
 
 
@@ -84,6 +85,12 @@ void ABaseCharacter::I_AN_EndAttack()
 		AttackComponent->AN_EndAttack();
 }
 
+void ABaseCharacter::I_AN_EndHitReact()
+{
+	CombatState = ECombatState::Ready;
+	I_AN_EndAttack();
+}
+
 void ABaseCharacter::I_AN_ComboAttack()
 {
 	if (AttackComponent)
@@ -105,7 +112,8 @@ void ABaseCharacter::I_ANS_BeginTraceHit()
 
 void ABaseCharacter::I_RequestAttack()
 {
-	if (AttackComponent)
+
+	if (CombatState == ECombatState::Ready && AttackComponent)
 		AttackComponent->RequestAttack();
 }
 
@@ -161,21 +169,67 @@ void ABaseCharacter::HandleTakePointDamage(
 	const UDamageType* DamageType, 
 	AActor* DamageCauser)
 {
-	/*GEngine->AddOnScreenDebugMessage(
-		-1,
-		1.0f,
-		FColor::Cyan,
-		TEXT("Handle Take Point")
-	);*/
-	
-	// Hit Impact effect
-	if (BaseCharacterData == nullptr)
-		return;
-
+	SpawnHitImpact(HitLocation);
 	// Update Health
 	if (HealthComponent)
 		HealthComponent->UpdateHealthByDamage(Damage);
 
+	
+	
+	// mau > 0 -> attacked
+	// mau <= 0 -> death
+	if (HealthComponent->Health > 0.0f)
+		HandleAttacked(ShotFromDirection);
+	else
+		HandleDead();
+}
+
+void ABaseCharacter::HandleDead()
+{
+	// Death Sound
+	// Death Animation
+	if (BaseCharacterData == nullptr)
+		return;
+	UGameplayStatics::PlaySoundAtLocation(
+		this,
+		BaseCharacterData->DeadSound,
+		GetActorLocation());
+
+	float DeadMontageSecond = PlayAnimMontage(BaseCharacterData->DeadMontage);
+	CombatState = ECombatState::Dead;
+
+	if (GetCharacterMovement())
+		GetCharacterMovement()->StopMovementImmediately();
+
+	if (GetCapsuleComponent() && GetMesh()) 
+	{
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	SetLifeSpan(DeadMontageSecond);
+}
+
+void ABaseCharacter::HandleAttacked(const FVector& ShotFromDirection)
+{
+	if (BaseCharacterData == nullptr)
+		return;
+	// Play Pain Sound, Pain from character -> Actor Location
+	UGameplayStatics::PlaySoundAtLocation(
+		this,
+		BaseCharacterData->PainSound,
+		GetActorLocation());
+
+	// hit react animation
+	PlayAnimMontage(GetCorrectHitReactMontage(ShotFromDirection));
+	CombatState = ECombatState::Attacked;
+
+}
+
+void ABaseCharacter::SpawnHitImpact(const FVector& HitLocation)
+{
+	if (BaseCharacterData == nullptr)
+		return;
 	UGameplayStatics::SpawnEmitterAtLocation(
 		GetWorld(),
 		BaseCharacterData->HitImpactEffect,
@@ -183,22 +237,9 @@ void ABaseCharacter::HandleTakePointDamage(
 
 	// Play Hit Impact Sound
 	UGameplayStatics::PlaySoundAtLocation(
-		this, 
-		BaseCharacterData->HitImpactSound, 
-		HitLocation);
-
-	// Play Pain Sound, Pain from character -> Actor Location
-	UGameplayStatics::PlaySoundAtLocation(
 		this,
-		BaseCharacterData->PainSound,
+		BaseCharacterData->HitImpactSound,
 		HitLocation);
-
-	// hit react animation
-	// Get correct react montage
-	PlayAnimMontage(GetCorrectHitReactMontage(ShotFromDirection));
-	//PlayAnimMontage(BaseCharacterData->HitReactMontage);
-	CombatState = ECombatState::Attacked;
-		
 }
 
 UAnimMontage* ABaseCharacter::GetCorrectHitReactMontage(const FVector& AttackDirection) const

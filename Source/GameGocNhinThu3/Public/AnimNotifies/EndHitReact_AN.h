@@ -13,5 +13,10 @@ UCLASS()
 class GAMEGOCNHINTHU3_API UEndHitReact_AN : public UAnimNotify
 {
 	GENERATED_BODY()
-	
+
+public:
+	virtual void Notify(
+		USkeletalMeshComponent* MeshComp,
+		UAnimSequenceBase* Animation,
+		const FAnimNotifyEventReference& EventReference) override;
 };

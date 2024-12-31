@@ -20,6 +20,7 @@ public:
 	//Enemy Interface
 	virtual FVector I_GetTargetLocation() override;
 	virtual void I_HandleSeePlayer(AActor* PlayerActor) override;
+	virtual void Destroyed() override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -34,6 +35,13 @@ protected:
 		FVector ShotFromDirection,
 		const class UDamageType* DamageType,
 		AActor* DamageCauser) override; 
+
+	virtual void HandleDead() override;
+
+
+private:
+	UFUNCTION()
+	void HandlePlayerExitCombat();
 
 private:
 	UPROPERTY()

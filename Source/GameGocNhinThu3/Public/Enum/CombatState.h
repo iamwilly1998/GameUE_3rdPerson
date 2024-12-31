@@ -2,5 +2,6 @@
 enum class ECombatState : uint8
 {
 	Ready,
-	Attacked
+	Attacked,
+	Dead
 };

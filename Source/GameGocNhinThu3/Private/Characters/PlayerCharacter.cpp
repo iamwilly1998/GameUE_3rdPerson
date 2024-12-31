@@ -44,6 +44,22 @@ void APlayerCharacter::BeginPlay()
 	}
 }
 
+void APlayerCharacter::HandleTakePointDamage(AActor* DamagedActor, float Damage, AController* InstigatedBy, FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser)
+{
+	Super::HandleTakePointDamage(DamagedActor, Damage, InstigatedBy, HitLocation, FHitComponent, BoneName, ShotFromDirection, DamageType, DamageCauser);
+	if (PlayerWidget && HealthComponent)
+		PlayerWidget->UpdateHealthBar_Player(HealthComponent->Health, HealthComponent->MaxHealth);
+}
+
+void APlayerCharacter::HandleDead()
+{
+	Super::HandleDead();
+	if(PlayerWidget)
+		PlayerWidget->RemoveFromParent();
+	auto PlayerController = Cast<APlayerController>(GetController());
+	DisableInput(PlayerController);
+}
+
 void APlayerCharacter::I_EnterCombat(float Health_Enemy, float MaxHealth_Enemy)
 {
 	if (PlayerWidget)
@@ -63,6 +79,12 @@ void APlayerCharacter::I_HitTarget(float Health_Target, float MaxHealth_Target)
 	}
 }
 
+void APlayerCharacter::I_HandleTargetDestroyed()
+{
+	if (PlayerWidget)
+		PlayerWidget->HideEnemyStats();
+}
+
 #pragma region Input
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -77,6 +99,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(EnhancedInputData->IA_LookAround, ETriggerEvent::Triggered, this, &APlayerCharacter::LookAround);
 	EnhancedInputComponent->BindAction(EnhancedInputData->IA_Moving, ETriggerEvent::Triggered, this, &APlayerCharacter::Moving);
 	EnhancedInputComponent->BindAction(EnhancedInputData->IA_Attack, ETriggerEvent::Started, this, &APlayerCharacter::AttackPressed);
+	EnhancedInputComponent->BindAction(EnhancedInputData->IA_ExitCombat, ETriggerEvent::Started, this, &APlayerCharacter::ExitCombatPressed);
+
 }
 
 void APlayerCharacter::CharacterAddMappingContext()
@@ -120,6 +144,16 @@ void APlayerCharacter::Moving(const FInputActionValue& Value)
 void APlayerCharacter::AttackPressed()
 {
 	I_RequestAttack();
+}
+void APlayerCharacter::ExitCombatPressed()
+{
+	// Hide enemy health
+	// Player -> Exit combat -> noti to enemy ->  patrol
+	if (PlayerWidget)
+		PlayerWidget->HideEnemyStats();
+
+	if (I_OnExitCombat.IsBound())
+		I_OnExitCombat.Execute();
 }
 #pragma endregion
 

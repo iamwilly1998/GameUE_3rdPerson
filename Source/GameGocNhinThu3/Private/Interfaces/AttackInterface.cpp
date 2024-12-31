@@ -14,3 +14,7 @@ void IAttackInterface::I_HitTarget(float Health_Target, float MaxHealth_Target)
 {
 
 }
+
+void IAttackInterface::I_HandleTargetDestroyed()
+{
+}

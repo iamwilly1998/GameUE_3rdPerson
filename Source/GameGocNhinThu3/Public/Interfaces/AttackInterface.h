@@ -16,6 +16,9 @@ class UAttackInterface : public UInterface
 /**
  * 
  */
+DECLARE_DYNAMIC_DELEGATE(FExitCombatDelegate);
+
+
 class GAMEGOCNHINTHU3_API IAttackInterface
 {
 	GENERATED_BODY()
@@ -26,6 +29,8 @@ public:
 	virtual void I_PlayAttackingSound() = 0;
 	virtual void I_AN_EndAttack() = 0; 
 	virtual void I_AN_ComboAttack() = 0;
+	virtual void I_AN_EndHitReact() = 0;
+
 	// Getter
 	virtual FVector I_GetSocketLocation(const FName& SocketName) const = 0;
 
@@ -37,4 +42,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void I_RequestAttack() = 0;
+
+	virtual void I_HandleTargetDestroyed();
+
+public:
+	FExitCombatDelegate I_OnExitCombat;
 };

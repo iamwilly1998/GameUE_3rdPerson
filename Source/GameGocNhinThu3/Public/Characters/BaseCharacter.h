@@ -33,6 +33,7 @@ public:
 	virtual void I_PlayAttackingSound() override;
 
 	virtual void I_AN_EndAttack() override;
+	virtual void I_AN_EndHitReact() override;
 	virtual void I_AN_ComboAttack() override;
 	virtual FVector I_GetSocketLocation(const FName& SocketName) const override;
 	virtual void I_ANS_TraceHit() override;
@@ -57,6 +58,11 @@ protected:
 		const class UDamageType* DamageType,
 		AActor* DamageCauser);
 
+	virtual void HandleDead();
+
+
+
+
 private:
 	// Attack Direction
 	UAnimMontage* GetCorrectHitReactMontage(const FVector& AttackDirection) const;
@@ -64,6 +70,10 @@ private:
 	//Event Function
 	UFUNCTION()
 	void HandleHitSomething(const FHitResult& HitResult);
+
+	void SpawnHitImpact(const FVector& HitLocation);
+	void HandleAttacked(const FVector& ShotFromDirection);
+
 	
 protected:
 
