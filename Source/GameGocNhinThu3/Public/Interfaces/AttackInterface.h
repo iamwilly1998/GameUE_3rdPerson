@@ -37,13 +37,17 @@ public:
 	virtual void I_ANS_TraceHit() = 0;
 	virtual void I_ANS_BeginTraceHit() = 0;
 
-	virtual void I_EnterCombat(float Health_Enemy, float MaxHealth_Enemy);
+	virtual void I_EnterCombat(float Health_Enemy, float MaxHealth_Enemy, float Stamina_Enemy, float MaxStamina_Enemy);
 	virtual void I_HitTarget(float Health_Target, float MaxHealth_Target);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void I_RequestAttack() = 0;
 
 	virtual void I_HandleTargetDestroyed();
+
+	virtual void I_HandleAttackSuccess() = 0;
+	virtual void I_HandleTargetAttacked(float Stamina_Target, float MaxStamina_Target);
+
 
 public:
 	FExitCombatDelegate I_OnExitCombat;

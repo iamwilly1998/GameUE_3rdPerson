@@ -26,9 +26,11 @@ public:
 	APlayerCharacter();
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// Attack Interface
-	virtual void I_EnterCombat(float Health_Enemy, float MaxHealth_Enemy) override;
+	virtual void I_EnterCombat(float Health_Enemy, float MaxHealth_Enemy, float Stamina_Enemy, float MaxStamina_Enemy) override;
 	virtual void I_HitTarget(float Health_Target, float MaxHealth_Target) override;
 	virtual void I_HandleTargetDestroyed() override;
+	virtual void I_HandleAttackSuccess() override;
+	virtual void I_HandleTargetAttacked(float Stamina_Target, float MaxStamina_Target) override;
 
 protected:
 	virtual void BeginPlay() override;

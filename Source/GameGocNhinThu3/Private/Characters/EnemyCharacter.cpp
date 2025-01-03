@@ -4,9 +4,17 @@
 #include "Characters/EnemyCharacter.h"
 #include "Interfaces/AttackInterface.h"
 #include "Components/HealthComponent.h"
+#include "Components/StaminaComponent.h"
 #include "DataAssets/BaseCharacterData.h"
 #include "Controllers/EnemyAIController.h"
 
+
+void AEnemyCharacter::I_HandleAttackSuccess()
+{
+	Super::I_HandleAttackSuccess();
+	if (AttackInterface_Player && StaminaComponent)
+		AttackInterface_Player->I_HandleTargetAttacked(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
+}
 
 FVector AEnemyCharacter::I_GetTargetLocation()
 {
@@ -34,8 +42,8 @@ void AEnemyCharacter::I_HandleSeePlayer(AActor* PlayerActor)
 	if (AttackInterface_Player == nullptr)
 		return;
 
-	if (AttackInterface_Player && HealthComponent)
-		AttackInterface_Player->I_EnterCombat(HealthComponent->Health, HealthComponent->MaxHealth);
+	if (AttackInterface_Player && HealthComponent && StaminaComponent)
+		AttackInterface_Player->I_EnterCombat(HealthComponent->Health, HealthComponent->MaxHealth, StaminaComponent->Stamina, StaminaComponent->MaxStamina);
 
 	if (AttackInterface_Player->I_OnExitCombat.IsBound() == false)
 		AttackInterface_Player->I_OnExitCombat.BindDynamic(this, &AEnemyCharacter::HandlePlayerExitCombat);

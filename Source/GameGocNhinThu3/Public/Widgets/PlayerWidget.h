@@ -19,6 +19,8 @@ class GAMEGOCNHINTHU3_API UPlayerWidget : public UUserWidget
 public:
 	void UpdateHealthBar_Player(float Health, float MaxHealth);
 	void UpdateHealthBar_Enemy(float Health, float MaxHealth);
+	void UpdateStaminaBar_Player(float Stamina, float MaxStamina);
+	void UpdateStaminaBar_Enemy(float Stamina, float MaxStamina);
 
 	void ShowEnemyStats();
 	void HideEnemyStats();	
@@ -32,4 +34,12 @@ private:
 	UTextBlock* HealthText_Enemy;
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* HealthText_Player;
+	UPROPERTY(meta = (BindWidget))
+	UProgressBar* StaminaBar_Player;
+	UPROPERTY(meta = (BindWidget))
+	UProgressBar* StaminaBar_Enemy;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* StaminaText_Enemy;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* StaminaText_Player;
 };

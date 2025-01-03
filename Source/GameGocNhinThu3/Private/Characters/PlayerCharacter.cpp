@@ -4,6 +4,7 @@
 #include "Characters/PlayerCharacter.h"
 #include "Widgets/PlayerWidget.h"
 #include "Components/HealthComponent.h"
+#include "Components/StaminaComponent.h"
 #include "DataAssets/BaseCharacterData.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -32,7 +33,7 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	// Playerwidget
+	// Player widget
 	// World
 	PlayerWidget = CreateWidget<UPlayerWidget>(GetWorld(), PlayerWidgetClass);
 
@@ -40,6 +41,7 @@ void APlayerCharacter::BeginPlay()
 	{
 		PlayerWidget->AddToViewport();
 		PlayerWidget->UpdateHealthBar_Player(HealthComponent->Health, HealthComponent->MaxHealth);
+		PlayerWidget->UpdateStaminaBar_Player(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
 		PlayerWidget->HideEnemyStats();
 	}
 }
@@ -60,12 +62,13 @@ void APlayerCharacter::HandleDead()
 	DisableInput(PlayerController);
 }
 
-void APlayerCharacter::I_EnterCombat(float Health_Enemy, float MaxHealth_Enemy)
+void APlayerCharacter::I_EnterCombat(float Health_Enemy, float MaxHealth_Enemy, float Stamina_Enemy, float MaxStamina_Enemy)
 {
 	if (PlayerWidget)
 	{
 		PlayerWidget->ShowEnemyStats();
 		PlayerWidget->UpdateHealthBar_Enemy(Health_Enemy, MaxHealth_Enemy);
+		PlayerWidget->UpdateStaminaBar_Enemy(Stamina_Enemy, MaxStamina_Enemy);
 	}
 	if (BaseCharacterData)
 		ChangeWalkSpeed(BaseCharacterData->CombatSpeed);
@@ -83,6 +86,19 @@ void APlayerCharacter::I_HandleTargetDestroyed()
 {
 	if (PlayerWidget)
 		PlayerWidget->HideEnemyStats();
+}
+
+void APlayerCharacter::I_HandleAttackSuccess()
+{
+	Super::I_HandleAttackSuccess();
+	if (StaminaComponent)	
+		PlayerWidget->UpdateStaminaBar_Player(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
+}
+
+void APlayerCharacter::I_HandleTargetAttacked(float Stamina_Target, float MaxStamina_Target)
+{
+	if (PlayerWidget)
+		PlayerWidget->UpdateStaminaBar_Enemy(Stamina_Target, MaxStamina_Target);
 }
 
 #pragma region Input

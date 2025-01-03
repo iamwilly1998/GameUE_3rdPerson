@@ -126,6 +126,7 @@ void UAttackComponent::Attack()
 		bIsAttacking = true;
 		bCanCombo = false;
 		AttackIndex = (AttackIndex +1) % BaseCharacterData->AttackMontages.Num();
+		AttackInterface->I_HandleAttackSuccess();
 	}
 }
 

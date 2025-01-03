@@ -17,6 +17,8 @@ class GAMEGOCNHINTHU3_API AEnemyCharacter : public ABaseCharacter, public IEnemy
 	GENERATED_BODY()
 
 public:
+	// Attack Interface
+	virtual void I_HandleAttackSuccess();
 	//Enemy Interface
 	virtual FVector I_GetTargetLocation() override;
 	virtual void I_HandleSeePlayer(AActor* PlayerActor) override;
