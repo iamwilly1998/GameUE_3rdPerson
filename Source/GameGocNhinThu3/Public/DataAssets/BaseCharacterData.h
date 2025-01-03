@@ -73,6 +73,10 @@ public:
 	float Health = 100.0f; 
 	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float MaxHealth = 100.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
+	float Stamina = 100.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
+	float MaxStamina = 100.0f;
 
 	// Speed
 	UPROPERTY(EditDefaultsOnly, Category = "Speed")

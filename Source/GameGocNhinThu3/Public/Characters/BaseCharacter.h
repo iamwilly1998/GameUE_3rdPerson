@@ -10,6 +10,7 @@
 
 class UAttackComponent;
 class UHealthComponent;
+class UStaminaComponent;
 class UEnhancedInputData;
 class UBaseCharacterData;
 
@@ -82,6 +83,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	UHealthComponent* HealthComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	UStaminaComponent* StaminaComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character Data Assets")
 	UBaseCharacterData* BaseCharacterData;

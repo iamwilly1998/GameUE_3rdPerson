@@ -4,6 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/AttackComponent.h"
+#include "Components/StaminaComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 
@@ -18,6 +19,8 @@ ABaseCharacter::ABaseCharacter()
 	// Actor component
 	AttackComponent = CreateDefaultSubobject<UAttackComponent>(TEXT("Attack Component"));
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
+	StaminaComponent = CreateDefaultSubobject<UStaminaComponent>(TEXT("Stamina Component"));
+
 
 	// Prevent character move with controller
 	bUseControllerRotationYaw = false;
@@ -43,6 +46,10 @@ void ABaseCharacter::PostInitializeComponents()
 	// Health component
 	if (HealthComponent)
 		HealthComponent->SetupComponent(BaseCharacterData);
+
+	// Stamina component
+	if (StaminaComponent)
+		StaminaComponent->SetupComponent(BaseCharacterData);
 }
 
 void ABaseCharacter::ChangeWalkSpeed(float WalkSpeed)
