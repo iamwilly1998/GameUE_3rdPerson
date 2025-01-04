@@ -47,6 +47,7 @@ public:
 	float AttackDamage = 0.0f;
 
 	bool bIsAttacking = false;
+	int AttackCount = 0;
 
 private:
 	// Save Actor that have interface

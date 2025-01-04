@@ -30,3 +30,7 @@ void IAttackInterface::I_RegenStamina()
 void IAttackInterface::I_Target_RegenStamina(float Stamina_Target, float MaxStamina_Target)
 {
 }
+
+void IAttackInterface::I_RequestAttackFail_Stamina(float StaminaCost)
+{
+}

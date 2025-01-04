@@ -5,8 +5,10 @@
 #include "Interfaces/AttackInterface.h"
 #include "Components/HealthComponent.h"
 #include "Components/StaminaComponent.h"
+#include "Components/AttackComponent.h"
 #include "DataAssets/BaseCharacterData.h"
 #include "Controllers/EnemyAIController.h"
+
 
 
 void AEnemyCharacter::I_HandleAttackSuccess()
@@ -20,6 +22,19 @@ void AEnemyCharacter::I_RegenStamina()
 {
 	if(AttackInterface_Player && StaminaComponent)
 		AttackInterface_Player->I_Target_RegenStamina(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
+	if (EnemyAIController == nullptr)
+		return;
+	if (EnemyAIController->bIsRegenStamina)
+	{
+		if (I_HasEnoughStamina(EnemyAIController->TargetStamina))
+			EnemyAIController->RegenToCombat();
+	}
+}
+
+void AEnemyCharacter::I_RequestAttackFail_Stamina(float StaminaCost)
+{
+	if (EnemyAIController)
+		EnemyAIController->StartRegenStamina(StaminaCost);
 }
 
 FVector AEnemyCharacter::I_GetTargetLocation()
@@ -63,11 +78,28 @@ void AEnemyCharacter::Destroyed()
 
 }
 
+void AEnemyCharacter::I_RequestAttack()
+{
+	if (AttackComponent == nullptr)
+		return;
+	if (AttackComponent->AttackCount >= 3)
+	{
+		AttackComponent->RequestAttackType = EAttackType::StrongAttack;
+	}
+	else {
+		AttackComponent->RequestAttackType = EAttackType::LightAttack;
+	}
+	
+	Super::I_RequestAttack();
+}
+
 void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	if(BaseCharacterData)
 		ChangeWalkSpeed(BaseCharacterData->PatrolSpeed);
+	EnemyAIController = Cast<AEnemyAIController>(GetController());
+
 }
 
 void AEnemyCharacter::HandleTakePointDamage(AActor* DamagedActor, float Damage, AController* InstigatedBy, FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser)
@@ -89,7 +121,6 @@ void AEnemyCharacter::HandlePlayerExitCombat()
 {
 	// change to patrol
 	// AI state -> patrol
-	auto EnemyAIController = Cast<AEnemyAIController>(GetController());
 	if (EnemyAIController)
 		EnemyAIController->BackToPatrol();
 }

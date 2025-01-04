@@ -7,6 +7,7 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Enum/AIState.h"
 
 
@@ -105,6 +106,7 @@ void AEnemyAIController::CheckDistance(AActor* AIACtor, AActor* PlayerActor, flo
 		BackToPatrol();
 		return;
 	}
+	if (bIsRegenStamina) return;
 
 	if (AIACtor == nullptr || PlayerActor == nullptr)
 		return;
@@ -132,6 +134,33 @@ void AEnemyAIController::BackToPatrol()
 		this, 
 		&AEnemyAIController::ExitCombatTimerFinished, 
 		ExitCombatSecond);
+}
+
+void AEnemyAIController::StartRegenStamina(float Stamina)
+{
+	bIsRegenStamina = true;
+	TargetStamina = Stamina;
+	if (Blackboard)
+		Blackboard->SetValueAsEnum(Key_AIState, (uint8)EAIState::Regen);
+}
+
+void AEnemyAIController::RegenToCombat()
+{
+	bIsRegenStamina = false;
+	if (Blackboard)
+		Blackboard->SetValueAsEnum(Key_AIState, (uint8)EAIState::Combat);
+}
+
+void AEnemyAIController::UpdateRegenLocation(AActor* AIACtor, AActor* PlayerActor, float RegenRange)
+{
+	// C = A + (h * distance)
+	if (PlayerActor == nullptr || AIACtor == nullptr)
+		return;
+	const auto Direction_Player_AI = UKismetMathLibrary::GetDirectionUnitVector(PlayerActor->GetActorLocation(), AIACtor->GetActorLocation());
+	const auto RegenLocation = PlayerActor->GetActorLocation() + (Direction_Player_AI * RegenRange);
+
+	if(Blackboard)
+		Blackboard->SetValueAsVector(Key_RegenLocation, RegenLocation);
 }
 
 void AEnemyAIController::ExitCombatTimerFinished()

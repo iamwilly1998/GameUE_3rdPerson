@@ -39,6 +39,10 @@ bool UAttackComponent::CanAttack() const
 	const bool A = bIsAttacking == false || bCanCombo == true;
 	const bool B = AttackInterface->I_DoesReadyToAttack();
 	const bool C = AttackInterface->I_HasEnoughStamina(BaseCharacterData->CostMap[RequestAttackType]);
+
+	if (C == false)
+		AttackInterface->I_RequestAttackFail_Stamina(BaseCharacterData->CostMap[RequestAttackType]);
+
 	return A && B && C;
 }
 
@@ -143,6 +147,10 @@ void UAttackComponent::Attack()
 			AttackIndex = (AttackIndex +1) % BaseCharacterData->AttackMontages.Num();
 		StaminaAttackCost = BaseCharacterData->CostMap[RequestAttackType];
 		AttackDamage = BaseCharacterData->DamageMap[RequestAttackType];
+
+		if (RequestAttackType == EAttackType::LightAttack)
+			AttackCount++;
+		else AttackCount = 0;
 
 		AttackInterface->I_HandleAttackSuccess();
 	}

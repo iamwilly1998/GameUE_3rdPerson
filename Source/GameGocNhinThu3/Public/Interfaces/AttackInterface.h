@@ -52,6 +52,7 @@ public:
 	virtual void I_RegenStamina();
 	virtual void I_Target_RegenStamina(float Stamina_Target, float MaxStamina_Target);
 	virtual bool I_IsInCombat() const = 0;
+	virtual void I_RequestAttackFail_Stamina(float StaminaCost);
 
 public:
 	FExitCombatDelegate I_OnExitCombat;
