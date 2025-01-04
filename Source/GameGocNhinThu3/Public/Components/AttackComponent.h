@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Enum/AttackType.h"
 #include "AttackComponent.generated.h"
 
 DECLARE_DYNAMIC_DELEGATE_OneParam(FHitSomeThingDelegate, const FHitResult&, HitResult);
@@ -22,6 +23,7 @@ public:
 	UAttackComponent();
 	//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void RequestAttack();
+	bool CanAttack() const;
 	void TraceHit();
 	void SetupAttackComponent(UBaseCharacterData* BCD);
 	void AN_EndAttack();
@@ -39,6 +41,7 @@ private:
 
 public:
 	FHitSomeThingDelegate HitSomeThingDelegate;
+	EAttackType RequestAttackType = EAttackType::LightAttack;
 
 private:
 	// Save Actor that have interface

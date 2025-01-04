@@ -115,6 +115,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(EnhancedInputData->IA_LookAround, ETriggerEvent::Triggered, this, &APlayerCharacter::LookAround);
 	EnhancedInputComponent->BindAction(EnhancedInputData->IA_Moving, ETriggerEvent::Triggered, this, &APlayerCharacter::Moving);
 	EnhancedInputComponent->BindAction(EnhancedInputData->IA_Attack, ETriggerEvent::Started, this, &APlayerCharacter::AttackPressed);
+	EnhancedInputComponent->BindAction(EnhancedInputData->IA_StrongAttack, ETriggerEvent::Started, this, &APlayerCharacter::StrongAttackPressed);
 	EnhancedInputComponent->BindAction(EnhancedInputData->IA_ExitCombat, ETriggerEvent::Started, this, &APlayerCharacter::ExitCombatPressed);
 
 }
@@ -159,6 +160,13 @@ void APlayerCharacter::Moving(const FInputActionValue& Value)
 
 void APlayerCharacter::AttackPressed()
 {
+	// Light Attack
+	AttackComponent->RequestAttackType = EAttackType::LightAttack;
+	I_RequestAttack();
+}
+void APlayerCharacter::StrongAttackPressed()
+{
+	AttackComponent->RequestAttackType = EAttackType::StrongAttack;
 	I_RequestAttack();
 }
 void APlayerCharacter::ExitCombatPressed()

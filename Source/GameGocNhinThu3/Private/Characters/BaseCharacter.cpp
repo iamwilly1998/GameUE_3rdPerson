@@ -130,6 +130,17 @@ void ABaseCharacter::I_HandleAttackSuccess()
 		StaminaComponent->UpdateStamina(20.0f);
 }
 
+bool ABaseCharacter::I_DoesReadyToAttack() const
+{
+	return CombatState == ECombatState::Ready;
+}
+
+bool ABaseCharacter::I_HasEnoughStamina(float Cost) const
+{
+	if (StaminaComponent == nullptr) return false;
+	return StaminaComponent->Stamina >= Cost;
+}
+
 void ABaseCharacter::I_ANS_TraceHit()
 {
 	if (AttackComponent)

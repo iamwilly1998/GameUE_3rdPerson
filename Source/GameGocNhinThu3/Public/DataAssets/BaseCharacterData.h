@@ -20,6 +20,8 @@ public:
 	// T<Array> to have more than one attack montage
 	UPROPERTY(EditDefaultsOnly, Category = "Attack")
 	TArray<UAnimMontage*> AttackMontages;
+	UPROPERTY(EditDefaultsOnly, Category = "Attack")
+	UAnimMontage* StrongAttackMontage;
 
 	// Hit React Montage
 

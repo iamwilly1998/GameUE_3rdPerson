@@ -52,6 +52,7 @@ private:
 	void LookAround(const FInputActionValue& Value);
 	void Moving(const FInputActionValue& Value);
 	void AttackPressed();
+	void StrongAttackPressed();
 	void ExitCombatPressed();
 
 private:

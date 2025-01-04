@@ -25,11 +25,19 @@ void UAttackComponent::BeginPlay()
 
 void UAttackComponent::RequestAttack()
 {
-	// if not attack and can combo
-	bool bCanAttack = bIsAttacking == false || bCanCombo;
-	if (bCanAttack)
+	if (CanAttack())
 		Attack();
 	else bSavedAttack = true;
+}
+
+bool UAttackComponent::CanAttack() const
+{
+	if (AttackInterface == nullptr)
+		return false;
+	const bool A = bIsAttacking == false || bCanCombo == true;
+	const bool B = AttackInterface->I_DoesReadyToAttack();
+	const bool C = AttackInterface->I_HasEnoughStamina(20.f);
+	return A && B && C;
 }
 
 void UAttackComponent::TraceHit()
@@ -110,6 +118,10 @@ UAnimMontage* UAttackComponent::GetCorrectAttackMontage()
 {
 	if (BaseCharacterData == nullptr)
 		return nullptr;
+	// Strong Attack
+	if (RequestAttackType == EAttackType::StrongAttack)
+		return BaseCharacterData->StrongAttackMontage;
+	// Else Light Attack
 	if (BaseCharacterData->AttackMontages.IsEmpty())
 		return nullptr;
 	return BaseCharacterData->AttackMontages[AttackIndex];
@@ -125,7 +137,8 @@ void UAttackComponent::Attack()
 		AttackInterface->I_PlayAttackingSound();
 		bIsAttacking = true;
 		bCanCombo = false;
-		AttackIndex = (AttackIndex +1) % BaseCharacterData->AttackMontages.Num();
+		if(RequestAttackType == EAttackType::LightAttack)
+			AttackIndex = (AttackIndex +1) % BaseCharacterData->AttackMontages.Num();
 		AttackInterface->I_HandleAttackSuccess();
 	}
 }
