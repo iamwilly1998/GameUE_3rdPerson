@@ -43,7 +43,7 @@ public:
 	virtual void I_HandleAttackSuccess() override;
 	virtual bool I_DoesReadyToAttack() const override;
 	virtual bool I_HasEnoughStamina(float Cost) const override;
-
+	virtual bool I_IsInCombat() const override;
 #pragma endregion
 	
 

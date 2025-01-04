@@ -16,6 +16,12 @@ void AEnemyCharacter::I_HandleAttackSuccess()
 		AttackInterface_Player->I_HandleTargetAttacked(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
 }
 
+void AEnemyCharacter::I_RegenStamina()
+{
+	if(AttackInterface_Player && StaminaComponent)
+		AttackInterface_Player->I_Target_RegenStamina(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
+}
+
 FVector AEnemyCharacter::I_GetTargetLocation()
 {
 	if(PatrolPoints.IsEmpty())

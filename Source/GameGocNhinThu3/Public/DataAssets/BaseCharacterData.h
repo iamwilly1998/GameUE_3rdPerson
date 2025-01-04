@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-
+#include "Enum/AttackType.h"
 #include "BaseCharacterData.generated.h"
 
 class USoundBase;
@@ -15,13 +15,22 @@ UCLASS()
 class GAMEGOCNHINTHU3_API UBaseCharacterData : public UDataAsset
 {
 	GENERATED_BODY()
+public:
+	UBaseCharacterData();
 
 public:
-	// T<Array> to have more than one attack montage
+	// Attack Montage
 	UPROPERTY(EditDefaultsOnly, Category = "Attack")
 	TArray<UAnimMontage*> AttackMontages;
 	UPROPERTY(EditDefaultsOnly, Category = "Attack")
 	UAnimMontage* StrongAttackMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Attack")
+	TMap<EAttackType, float> CostMap;
+	UPROPERTY(EditDefaultsOnly, Category = "Attack")
+	TMap<EAttackType, float> DamageMap;
+
+	
 
 	// Hit React Montage
 
@@ -70,8 +79,6 @@ public:
 	float DrawTime = 1.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Stats")
-	float Damage = 20.0f;
-	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float Health = 100.0f; 
 	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float MaxHealth = 100.0f;
@@ -79,6 +86,8 @@ public:
 	float Stamina = 100.0f;
 	UPROPERTY(EditDefaultsOnly, Category = "Stats")
 	float MaxStamina = 100.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
+	float RegenStaminaRate = 100.0f;
 
 	// Speed
 	UPROPERTY(EditDefaultsOnly, Category = "Speed")

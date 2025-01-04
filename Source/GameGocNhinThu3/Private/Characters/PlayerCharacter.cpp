@@ -91,11 +91,23 @@ void APlayerCharacter::I_HandleTargetDestroyed()
 void APlayerCharacter::I_HandleAttackSuccess()
 {
 	Super::I_HandleAttackSuccess();
-	if (StaminaComponent)	
+	if (PlayerWidget && StaminaComponent)
 		PlayerWidget->UpdateStaminaBar_Player(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
 }
 
 void APlayerCharacter::I_HandleTargetAttacked(float Stamina_Target, float MaxStamina_Target)
+{
+	if (PlayerWidget)
+		PlayerWidget->UpdateStaminaBar_Enemy(Stamina_Target, MaxStamina_Target);
+}
+
+void APlayerCharacter::I_RegenStamina()
+{
+	if (PlayerWidget && StaminaComponent)
+		PlayerWidget->UpdateStaminaBar_Player(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
+}
+
+void APlayerCharacter::I_Target_RegenStamina(float Stamina_Target, float MaxStamina_Target)
 {
 	if (PlayerWidget)
 		PlayerWidget->UpdateStaminaBar_Enemy(Stamina_Target, MaxStamina_Target);

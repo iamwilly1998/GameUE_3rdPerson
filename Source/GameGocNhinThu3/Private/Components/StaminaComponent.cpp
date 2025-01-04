@@ -3,15 +3,14 @@
 
 #include "Components/StaminaComponent.h"
 #include "DataAssets/BaseCharacterData.h"
+#include "Interfaces/AttackInterface.h"
 
 // Sets default values for this component's properties
 UStaminaComponent::UStaminaComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
+	SetComponentTickInterval(0.03f);
 }
 
 
@@ -19,9 +18,7 @@ UStaminaComponent::UStaminaComponent()
 void UStaminaComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
-	
+	AttackInterface = TScriptInterface<IAttackInterface>(GetOwner());
 }
 
 
@@ -29,8 +26,13 @@ void UStaminaComponent::BeginPlay()
 void UStaminaComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	// Regen Stamina
 
-	// ...
+	if (Stamina < MaxStamina && AttackInterface && AttackInterface->I_IsInCombat() == false)
+	{
+		Stamina = FMath::Min(Stamina + (RegenStaminaRate * DeltaTime), MaxStamina);
+		AttackInterface->I_RegenStamina();
+	}
 }
 
 void UStaminaComponent::SetupComponent(UBaseCharacterData* BCD)
@@ -39,6 +41,7 @@ void UStaminaComponent::SetupComponent(UBaseCharacterData* BCD)
 	{
 		Stamina = BCD->Stamina;
 		MaxStamina = BCD->MaxStamina;
+		RegenStaminaRate = BCD->RegenStaminaRate;
 	}
 }
 

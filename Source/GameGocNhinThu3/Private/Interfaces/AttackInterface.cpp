@@ -22,3 +22,11 @@ void IAttackInterface::I_HandleTargetDestroyed()
 void IAttackInterface::I_HandleTargetAttacked(float Stamina_Target, float MaxStamina_Target)
 {
 }
+
+void IAttackInterface::I_RegenStamina()
+{
+}
+
+void IAttackInterface::I_Target_RegenStamina(float Stamina_Target, float MaxStamina_Target)
+{
+}

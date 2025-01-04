@@ -43,13 +43,17 @@ public:
 	FHitSomeThingDelegate HitSomeThingDelegate;
 	EAttackType RequestAttackType = EAttackType::LightAttack;
 
+	float StaminaAttackCost = 0.0f;
+	float AttackDamage = 0.0f;
+
+	bool bIsAttacking = false;
+
 private:
 	// Save Actor that have interface
 	TScriptInterface<IAttackInterface> AttackInterface;
 	UPROPERTY()
 	UBaseCharacterData* BaseCharacterData;
 	
-	bool bIsAttacking;
 	bool bCanCombo;
 	bool bSavedAttack;
 	int AttackIndex = 0;

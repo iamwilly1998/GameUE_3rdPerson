@@ -31,6 +31,9 @@ public:
 	virtual void I_HandleTargetDestroyed() override;
 	virtual void I_HandleAttackSuccess() override;
 	virtual void I_HandleTargetAttacked(float Stamina_Target, float MaxStamina_Target) override;
+	virtual void I_RegenStamina() override;
+	virtual void I_Target_RegenStamina(float Stamina_Target, float MaxStamina_Target) override;
+
 
 protected:
 	virtual void BeginPlay() override;

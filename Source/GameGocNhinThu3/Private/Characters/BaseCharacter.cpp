@@ -126,8 +126,8 @@ void ABaseCharacter::I_RequestAttack()
 
 void ABaseCharacter::I_HandleAttackSuccess()
 {
-	if(StaminaComponent)
-		StaminaComponent->UpdateStamina(20.0f);
+	if(StaminaComponent && AttackComponent)
+		StaminaComponent->UpdateStamina(AttackComponent->StaminaAttackCost);
 }
 
 bool ABaseCharacter::I_DoesReadyToAttack() const
@@ -139,6 +139,13 @@ bool ABaseCharacter::I_HasEnoughStamina(float Cost) const
 {
 	if (StaminaComponent == nullptr) return false;
 	return StaminaComponent->Stamina >= Cost;
+}
+
+bool ABaseCharacter::I_IsInCombat() const
+{
+	if (AttackComponent == nullptr)
+		return false;
+	return AttackComponent->bIsAttacking;
 }
 
 void ABaseCharacter::I_ANS_TraceHit()
@@ -166,13 +173,15 @@ void ABaseCharacter::HandleHitSomething(const FHitResult& HitResult)
 	// vi tri ng tan cong - vi tri ng bi tan cong
 	if (BaseCharacterData == nullptr)
 		return;
+	if (AttackComponent == nullptr)
+		return;
 
 	auto HitActor = HitResult.GetActor();
 	auto AttackDirection = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), HitActor->GetActorLocation());
 
 	UGameplayStatics::ApplyPointDamage(
 		HitActor,
-		BaseCharacterData->Damage,
+		AttackComponent->AttackDamage,
 		AttackDirection,
 		HitResult,
 		GetController(),
