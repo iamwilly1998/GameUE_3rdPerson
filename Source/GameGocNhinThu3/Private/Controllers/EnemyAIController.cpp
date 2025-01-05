@@ -88,7 +88,7 @@ void AEnemyAIController::HandleSeePlayer(AActor* Actor)
 	{
 		AIPerceptionComponent->OnTargetPerceptionUpdated.RemoveDynamic(this, &AEnemyAIController::HandleTargetPerceptionUpdate);
 	}
-	
+	SetFocus(Actor);
 }
 
 void AEnemyAIController::UpdatePatrolLocation()
@@ -129,11 +129,15 @@ void AEnemyAIController::BackToPatrol()
 		Blackboard->SetValueAsEnum(Key_AIState, (uint8)EAIState::Patrol);
 	DebugColor = FLinearColor::Gray;
 
+	if (GetWorldTimerManager().IsTimerActive(ExitCombatTimer))
+		GetWorldTimerManager().ClearTimer(ExitCombatTimer);
+
 	GetWorldTimerManager().SetTimer(
 		ExitCombatTimer, 
 		this, 
 		&AEnemyAIController::ExitCombatTimerFinished, 
 		ExitCombatSecond);
+	SetFocus(nullptr);
 }
 
 void AEnemyAIController::StartRegenStamina(float Stamina)

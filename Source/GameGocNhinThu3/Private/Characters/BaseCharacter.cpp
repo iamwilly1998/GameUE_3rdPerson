@@ -28,7 +28,8 @@ ABaseCharacter::ABaseCharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	// Rotation rate Yaw = Z
 	GetCharacterMovement()->RotationRate.Yaw = 540.0;
-
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
 
@@ -66,9 +67,50 @@ void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	OnTakePointDamage.AddDynamic(this, &ABaseCharacter::HandleTakePointDamage);
+	if (BaseCharacterData)
+		ChangeWalkSpeed(BaseCharacterData->DefaultSpeed);
 }
 
 #pragma region AttackInterface
+
+void ABaseCharacter::I_EnterCombat(AActor* TargetActor)
+{
+	AttackInterface_Target = TScriptInterface<IAttackInterface>(TargetActor);
+
+	Strafe();
+}
+
+void ABaseCharacter::Strafe()
+{
+	if (BaseCharacterData)
+		ChangeWalkSpeed(BaseCharacterData->CombatSpeed);
+
+	bUseControllerRotationYaw = true;
+	if (GetCharacterMovement())
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+	bIsStrafing = true;
+}
+
+void ABaseCharacter::NotStrafe()
+{
+	if (BaseCharacterData)
+		ChangeWalkSpeed(BaseCharacterData->DefaultSpeed);
+
+	bUseControllerRotationYaw = false;
+	if (GetCharacterMovement())
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+	bIsStrafing = false;
+}
+
+void ABaseCharacter::I_HandleExitCombat()
+{
+	NotStrafe();
+}
+
+void ABaseCharacter::I_ExitCombat()
+{
+	NotStrafe();
+}
 
 void ABaseCharacter::I_PlayAttackMontage(UAnimMontage* AttackMontage)
 {
@@ -120,7 +162,7 @@ void ABaseCharacter::I_ANS_BeginTraceHit()
 void ABaseCharacter::I_RequestAttack()
 {
 
-	if (CombatState == ECombatState::Ready && AttackComponent)
+	if (AttackComponent)
 		AttackComponent->RequestAttack();
 }
 
@@ -146,6 +188,26 @@ bool ABaseCharacter::I_IsInCombat() const
 	if (AttackComponent == nullptr)
 		return false;
 	return AttackComponent->bIsAttacking;
+}
+
+float ABaseCharacter::I_GetHealth() const
+{
+	return HealthComponent ? HealthComponent->Health : 0.0f;
+}
+
+float ABaseCharacter::I_GetMaxHealth() const
+{
+	return HealthComponent ? HealthComponent->MaxHealth : 0.0f;
+}
+
+float ABaseCharacter::I_GetStamina() const
+{
+	return StaminaComponent ? StaminaComponent->Stamina : 0.0f;
+}
+
+float ABaseCharacter::I_GetMaxStamina() const
+{
+	return StaminaComponent ? StaminaComponent->MaxStamina : 0.0f;
 }
 
 void ABaseCharacter::I_ANS_TraceHit()

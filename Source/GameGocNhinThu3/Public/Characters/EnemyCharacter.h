@@ -19,6 +19,9 @@ class GAMEGOCNHINTHU3_API AEnemyCharacter : public ABaseCharacter, public IEnemy
 
 public:
 	// Attack Interface
+	virtual void I_EnterCombat(AActor* TargetActor) override;
+	virtual void I_HandleExitCombat() override;
+
 	virtual void I_RequestAttack() override;
 	virtual void I_HandleAttackSuccess();
 	virtual void I_RegenStamina() override;
@@ -51,8 +54,6 @@ private:
 	void HandlePlayerExitCombat();
 
 private:
-	UPROPERTY()
-	TScriptInterface<IAttackInterface> AttackInterface_Player;
 
 	UPROPERTY(EditInstanceOnly, Category = "Patrol")
 	TArray<AActor*> PatrolPoints;

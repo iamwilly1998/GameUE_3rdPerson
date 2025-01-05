@@ -14,14 +14,14 @@
 void AEnemyCharacter::I_HandleAttackSuccess()
 {
 	Super::I_HandleAttackSuccess();
-	if (AttackInterface_Player && StaminaComponent)
-		AttackInterface_Player->I_HandleTargetAttacked(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
+	if (AttackInterface_Target && StaminaComponent)
+		AttackInterface_Target->I_HandleTargetAttacked(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
 }
 
 void AEnemyCharacter::I_RegenStamina()
 {
-	if(AttackInterface_Player && StaminaComponent)
-		AttackInterface_Player->I_Target_RegenStamina(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
+	if(AttackInterface_Target && StaminaComponent)
+		AttackInterface_Target->I_Target_RegenStamina(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
 	if (EnemyAIController == nullptr)
 		return;
 	if (EnemyAIController->bIsRegenStamina)
@@ -50,32 +50,35 @@ FVector AEnemyCharacter::I_GetTargetLocation()
 
 void AEnemyCharacter::I_HandleSeePlayer(AActor* PlayerActor)
 {
-
-	// Reduce walk speed when combat
-	if (BaseCharacterData)
-		ChangeWalkSpeed(BaseCharacterData->CombatSpeed);
-
-	// attack interface
-	// enter combat
-	// health/max health
-	AttackInterface_Player = TScriptInterface<IAttackInterface>(PlayerActor);
-
-	if (AttackInterface_Player == nullptr)
-		return;
-
-	if (AttackInterface_Player && HealthComponent && StaminaComponent)
-		AttackInterface_Player->I_EnterCombat(HealthComponent->Health, HealthComponent->MaxHealth, StaminaComponent->Stamina, StaminaComponent->MaxStamina);
-
-	if (AttackInterface_Player->I_OnExitCombat.IsBound() == false)
-		AttackInterface_Player->I_OnExitCombat.BindDynamic(this, &AEnemyCharacter::HandlePlayerExitCombat);
+	I_EnterCombat(PlayerActor);
 }
 
 void AEnemyCharacter::Destroyed()
 {
-	if (AttackInterface_Player)
-		AttackInterface_Player->I_HandleTargetDestroyed();
+	if (AttackInterface_Target)
+		AttackInterface_Target->I_HandleTargetDestroyed();
 	Super::Destroyed();
 
+}
+
+void AEnemyCharacter::I_EnterCombat(AActor* TargetActor)
+{
+	Super::I_EnterCombat(TargetActor);
+
+	// attack interface
+	// enter combat
+	// health/max health
+
+	if (AttackInterface_Target == nullptr)
+		return;
+	AttackInterface_Target->I_EnterCombat(this);
+}
+
+void AEnemyCharacter::I_HandleExitCombat()
+{
+	Super::I_HandleExitCombat();
+	if (EnemyAIController)
+		EnemyAIController->BackToPatrol();
 }
 
 void AEnemyCharacter::I_RequestAttack()
@@ -105,8 +108,8 @@ void AEnemyCharacter::BeginPlay()
 void AEnemyCharacter::HandleTakePointDamage(AActor* DamagedActor, float Damage, AController* InstigatedBy, FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser)
 {
 	Super::HandleTakePointDamage(DamagedActor, Damage, InstigatedBy, HitLocation, FHitComponent, BoneName, ShotFromDirection, DamageType, DamageCauser);
-	if (AttackInterface_Player && HealthComponent)
-		AttackInterface_Player->I_HitTarget(HealthComponent->Health, HealthComponent->MaxHealth);
+	if (AttackInterface_Target && HealthComponent)
+		AttackInterface_Target->I_HitTarget(HealthComponent->Health, HealthComponent->MaxHealth);
 }
 
 void AEnemyCharacter::HandleDead()

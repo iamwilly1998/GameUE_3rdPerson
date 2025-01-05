@@ -62,16 +62,32 @@ void APlayerCharacter::HandleDead()
 	DisableInput(PlayerController);
 }
 
-void APlayerCharacter::I_EnterCombat(float Health_Enemy, float MaxHealth_Enemy, float Stamina_Enemy, float MaxStamina_Enemy)
+void APlayerCharacter::I_EnterCombat(AActor* TargetActor)
 {
+	Super::I_EnterCombat(TargetActor);
+	ShowTargetStats();
+}
+
+void APlayerCharacter::I_ExitCombat()
+{
+	Super::I_ExitCombat();
+	// Hide enemy health
+	// Player -> Exit combat -> noti to enemy ->  patrol
+	if (PlayerWidget)
+		PlayerWidget->HideEnemyStats();
+
+	AttackInterface_Target->I_HandleExitCombat();
+}
+
+void APlayerCharacter::ShowTargetStats()
+{
+	if (AttackInterface_Target == nullptr) return;
 	if (PlayerWidget)
 	{
 		PlayerWidget->ShowEnemyStats();
-		PlayerWidget->UpdateHealthBar_Enemy(Health_Enemy, MaxHealth_Enemy);
-		PlayerWidget->UpdateStaminaBar_Enemy(Stamina_Enemy, MaxStamina_Enemy);
+		PlayerWidget->UpdateHealthBar_Enemy(AttackInterface_Target->I_GetHealth(), AttackInterface_Target->I_GetMaxHealth());
+		PlayerWidget->UpdateStaminaBar_Enemy(AttackInterface_Target->I_GetStamina(), AttackInterface_Target->I_GetMaxStamina());
 	}
-	if (BaseCharacterData)
-		ChangeWalkSpeed(BaseCharacterData->CombatSpeed);
 }
 
 void APlayerCharacter::I_HitTarget(float Health_Target, float MaxHealth_Target)
@@ -183,13 +199,7 @@ void APlayerCharacter::StrongAttackPressed()
 }
 void APlayerCharacter::ExitCombatPressed()
 {
-	// Hide enemy health
-	// Player -> Exit combat -> noti to enemy ->  patrol
-	if (PlayerWidget)
-		PlayerWidget->HideEnemyStats();
-
-	if (I_OnExitCombat.IsBound())
-		I_OnExitCombat.Execute();
+	I_ExitCombat();
 }
 #pragma endregion
 

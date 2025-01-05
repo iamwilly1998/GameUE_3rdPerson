@@ -30,6 +30,10 @@ public:
 
 	// Attack Interface
 #pragma region Attack Interface
+	virtual void I_EnterCombat(AActor* TargetActor) override;
+	virtual void I_HandleExitCombat() override;
+	virtual void I_ExitCombat() override;
+
 	virtual void I_PlayAttackMontage(UAnimMontage* AttackMontage) override;
 	virtual void I_PlayAttackingSound() override;
 
@@ -44,6 +48,10 @@ public:
 	virtual bool I_DoesReadyToAttack() const override;
 	virtual bool I_HasEnoughStamina(float Cost) const override;
 	virtual bool I_IsInCombat() const override;
+	virtual float I_GetHealth() const override;
+	virtual float I_GetMaxHealth() const override;
+	virtual float I_GetStamina() const override;
+	virtual float I_GetMaxStamina() const override;
 #pragma endregion
 	
 
@@ -64,6 +72,8 @@ protected:
 		AActor* DamageCauser);
 
 	virtual void HandleDead();
+	virtual void Strafe();
+	virtual void NotStrafe();
 
 
 
@@ -79,8 +89,13 @@ private:
 	void SpawnHitImpact(const FVector& HitLocation);
 	void HandleAttacked(const FVector& ShotFromDirection);
 
+public:
+	bool bIsStrafing = false;
 	
 protected:
+
+	UPROPERTY()
+	TScriptInterface<IAttackInterface> AttackInterface_Target;
 
 	UPROPERTY(VisibleAnywhere)
 	UAttackComponent* AttackComponent;

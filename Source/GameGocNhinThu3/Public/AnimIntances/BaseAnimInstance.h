@@ -25,6 +25,10 @@ protected:
 	bool bShouldMove = false;
 	UPROPERTY(BlueprintReadOnly)
 	bool bShouldBlendLowerUpper = true;
+	UPROPERTY(BlueprintReadOnly)
+	double StrafeValue = 0.0;
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsStrafing = false;
 
 private:
 	UPROPERTY()
