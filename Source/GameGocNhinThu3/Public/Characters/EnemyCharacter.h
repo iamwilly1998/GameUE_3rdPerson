@@ -7,7 +7,6 @@
 #include "Interfaces/EnemyInterface.h"
 #include "EnemyCharacter.generated.h"
 
-class IAttackInterface;
 class AEnemyAIController;
 /**
  * 
@@ -19,7 +18,11 @@ class GAMEGOCNHINTHU3_API AEnemyCharacter : public ABaseCharacter, public IEnemy
 
 public:
 	// Attack Interface
+
+
 	virtual void I_EnterCombat(AActor* TargetActor) override;
+	virtual void I_ReceiveCombat(AActor* TargetActor) override;
+
 	virtual void I_HandleExitCombat() override;
 
 	virtual void I_RequestAttack() override;
@@ -28,7 +31,7 @@ public:
 	virtual void I_RequestAttackFail_Stamina(float StaminaCost) override;
 
 	//Enemy Interface
-	virtual FVector I_GetTargetLocation() override;
+	virtual FVector I_GetPatrolLocation() override;
 	virtual void I_HandleSeePlayer(AActor* PlayerActor) override;
 	virtual void Destroyed() override;
 
@@ -53,10 +56,11 @@ private:
 	UFUNCTION()
 	void HandlePlayerExitCombat();
 
-private:
-
+public:
 	UPROPERTY(EditInstanceOnly, Category = "Patrol")
 	TArray<AActor*> PatrolPoints;
+
+private:
 	int PatrolIndex = 0;
 
 	UPROPERTY()

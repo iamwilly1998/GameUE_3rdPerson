@@ -9,7 +9,78 @@
 #include "DataAssets/BaseCharacterData.h"
 #include "Controllers/EnemyAIController.h"
 
+void AEnemyCharacter::BeginPlay()
+{
+	Super::BeginPlay();
 
+	if (BaseCharacterData)
+		ChangeWalkSpeed(BaseCharacterData->PatrolSpeed);
+
+	EnemyAIController = Cast<AEnemyAIController>(GetController());
+}
+
+FVector AEnemyCharacter::I_GetPatrolLocation()
+{
+	if (PatrolPoints.IsEmpty())
+		return GetActorLocation();
+	if (PatrolPoints[PatrolIndex] == nullptr)
+		return GetActorLocation();
+	auto ReturnValue = PatrolPoints[PatrolIndex]->GetActorLocation();
+	PatrolIndex = (PatrolIndex + 1) % PatrolPoints.Num();
+	return ReturnValue;
+}
+
+void AEnemyCharacter::I_HandleSeePlayer(AActor* PlayerActor)
+{
+	I_EnterCombat(PlayerActor);
+}
+
+void AEnemyCharacter::Destroyed()
+{
+	if (AttackInterface_Target)
+		AttackInterface_Target->I_HandleTargetDestroyed();
+
+	Super::Destroyed();
+}
+
+void AEnemyCharacter::I_HandleExitCombat()
+{
+	Super::I_HandleExitCombat();
+	if (EnemyAIController)
+		EnemyAIController->BackToPatrol();
+}
+
+void AEnemyCharacter::I_EnterCombat(AActor* TargetActor)
+{
+	Super::I_EnterCombat(TargetActor);
+
+	// attack interface
+	// enter combat
+	// health/max health
+
+	if (AttackInterface_Target)
+		AttackInterface_Target->I_ReceiveCombat(this);
+}
+
+void AEnemyCharacter::I_ReceiveCombat(AActor* TargetActor)
+{
+	Super::I_EnterCombat(TargetActor);
+}
+
+void AEnemyCharacter::I_RequestAttack()
+{
+	if (AttackComponent == nullptr)
+		return;
+	if (AttackComponent->AttackCount >= 3)
+	{
+		AttackComponent->RequestAttackType = EAttackType::StrongAttack;
+	}
+	else {
+		AttackComponent->RequestAttackType = EAttackType::LightAttack;
+	}
+
+	Super::I_RequestAttack();
+}
 
 void AEnemyCharacter::I_HandleAttackSuccess()
 {
@@ -37,73 +108,6 @@ void AEnemyCharacter::I_RequestAttackFail_Stamina(float StaminaCost)
 		EnemyAIController->StartRegenStamina(StaminaCost);
 }
 
-FVector AEnemyCharacter::I_GetTargetLocation()
-{
-	if(PatrolPoints.IsEmpty())
-		return GetActorLocation();
-	if (PatrolPoints[PatrolIndex] == nullptr)
-		return GetActorLocation();
-	auto ReturnValue = PatrolPoints[PatrolIndex]->GetActorLocation();
-	PatrolIndex = (PatrolIndex + 1) % PatrolPoints.Num();
-	return ReturnValue;
-}
-
-void AEnemyCharacter::I_HandleSeePlayer(AActor* PlayerActor)
-{
-	I_EnterCombat(PlayerActor);
-}
-
-void AEnemyCharacter::Destroyed()
-{
-	if (AttackInterface_Target)
-		AttackInterface_Target->I_HandleTargetDestroyed();
-	Super::Destroyed();
-
-}
-
-void AEnemyCharacter::I_EnterCombat(AActor* TargetActor)
-{
-	Super::I_EnterCombat(TargetActor);
-
-	// attack interface
-	// enter combat
-	// health/max health
-
-	if (AttackInterface_Target == nullptr)
-		return;
-	AttackInterface_Target->I_EnterCombat(this);
-}
-
-void AEnemyCharacter::I_HandleExitCombat()
-{
-	Super::I_HandleExitCombat();
-	if (EnemyAIController)
-		EnemyAIController->BackToPatrol();
-}
-
-void AEnemyCharacter::I_RequestAttack()
-{
-	if (AttackComponent == nullptr)
-		return;
-	if (AttackComponent->AttackCount >= 3)
-	{
-		AttackComponent->RequestAttackType = EAttackType::StrongAttack;
-	}
-	else {
-		AttackComponent->RequestAttackType = EAttackType::LightAttack;
-	}
-	
-	Super::I_RequestAttack();
-}
-
-void AEnemyCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-	if(BaseCharacterData)
-		ChangeWalkSpeed(BaseCharacterData->PatrolSpeed);
-	EnemyAIController = Cast<AEnemyAIController>(GetController());
-
-}
 
 void AEnemyCharacter::HandleTakePointDamage(AActor* DamagedActor, float Damage, AController* InstigatedBy, FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser)
 {
@@ -127,3 +131,7 @@ void AEnemyCharacter::HandlePlayerExitCombat()
 	if (EnemyAIController)
 		EnemyAIController->BackToPatrol();
 }
+
+
+
+

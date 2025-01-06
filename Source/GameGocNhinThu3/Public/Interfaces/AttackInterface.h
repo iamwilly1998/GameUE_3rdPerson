@@ -40,6 +40,8 @@ public:
 	virtual void I_ANS_BeginTraceHit() = 0;
 
 	virtual void I_EnterCombat(AActor* TargetActor) = 0;
+	virtual void I_ReceiveCombat(AActor* TargetActor) = 0;
+
 	virtual void I_ExitCombat() = 0;
 
 	virtual void I_HandleExitCombat() = 0;

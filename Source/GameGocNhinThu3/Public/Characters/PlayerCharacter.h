@@ -12,6 +12,7 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 class UEnhancedInputData;
+class UEndWidget;
 
 struct FInputActionValue;
 
@@ -24,6 +25,7 @@ class GAMEGOCNHINTHU3_API APlayerCharacter : public ABaseCharacter
 	GENERATED_BODY()
 public:
 	APlayerCharacter();
+	virtual void Destroyed() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// Attack Interface
 	virtual void I_EnterCombat(AActor* TargetActor) override;
@@ -50,6 +52,8 @@ protected:
 		AActor* DamageCauser) override;
 
 	virtual void HandleDead() override;
+	virtual void HandleAttacked(const FVector& ShotFromDirection) override;
+
 
 private:
 	void CharacterAddMappingContext();
@@ -59,8 +63,17 @@ private:
 	void StrongAttackPressed();
 	void ExitCombatPressed();
 	void ShowTargetStats();
+	void ShowEndWidget(FText ResultText);
+	void PlayThemeSound_Background();
+	void PlayThemeSound_Combat();
 
 private:
+	FText LoseText = FText::FromString(TEXT("Lose"));
+	FText WinText = FText::FromString(TEXT("Win"));
+
+	int Kills = 0;
+	UPROPERTY()
+	UAudioComponent* BackgroundAudio;
 
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* SpringArmComponent;
@@ -71,5 +84,11 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
 	TSubclassOf<UUserWidget> PlayerWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
+	TSubclassOf<UUserWidget> EndWidgetClass;
+
+	UPROPERTY()
 	UPlayerWidget* PlayerWidget;
+	UPROPERTY()
+	UEndWidget* EndWidget;
 };

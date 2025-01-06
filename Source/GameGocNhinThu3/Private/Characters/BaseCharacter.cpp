@@ -57,9 +57,6 @@ void ABaseCharacter::ChangeWalkSpeed(float WalkSpeed)
 {
 	if(GetCharacterMovement())
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-	// Combat Speed
-	// Default Speed
-	// Patrol Speed
 }
 
 // Called when the game starts or when spawned
@@ -74,6 +71,13 @@ void ABaseCharacter::BeginPlay()
 #pragma region AttackInterface
 
 void ABaseCharacter::I_EnterCombat(AActor* TargetActor)
+{
+	AttackInterface_Target = TScriptInterface<IAttackInterface>(TargetActor);
+
+	Strafe();
+}
+
+void ABaseCharacter::I_ReceiveCombat(AActor* TargetActor)
 {
 	AttackInterface_Target = TScriptInterface<IAttackInterface>(TargetActor);
 
@@ -253,8 +257,7 @@ void ABaseCharacter::HandleHitSomething(const FHitResult& HitResult)
 		);
 }
 
-void ABaseCharacter::HandleTakePointDamage(
-	AActor* DamagedActor, 
+void ABaseCharacter::HandleTakePointDamage(AActor* DamagedActor, 
 	float Damage, 
 	AController* InstigatedBy, 
 	FVector HitLocation, 
@@ -288,7 +291,8 @@ void ABaseCharacter::HandleDead()
 	UGameplayStatics::PlaySoundAtLocation(
 		this,
 		BaseCharacterData->DeadSound,
-		GetActorLocation());
+		GetActorLocation()
+	);
 
 	float DeadMontageSecond = PlayAnimMontage(BaseCharacterData->DeadMontage);
 	CombatState = ECombatState::Dead;

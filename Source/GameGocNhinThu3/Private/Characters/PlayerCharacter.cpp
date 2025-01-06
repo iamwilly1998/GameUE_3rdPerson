@@ -3,6 +3,8 @@
 
 #include "Characters/PlayerCharacter.h"
 #include "Widgets/PlayerWidget.h"
+#include "Widgets/EndWidget.h"
+
 #include "Components/HealthComponent.h"
 #include "Components/StaminaComponent.h"
 #include "DataAssets/BaseCharacterData.h"
@@ -11,6 +13,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DataAssets/EnhancedInputData.h"
 #include "Components/AttackComponent.h"	
+#include "Kismet/GameplayStatics.h"
+#include "Components/AudioComponent.h"
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
@@ -30,6 +34,34 @@ APlayerCharacter::APlayerCharacter()
 
 }
 
+void APlayerCharacter::Destroyed()
+{
+	Super::Destroyed();
+}
+
+void APlayerCharacter::ShowEndWidget(FText ResultText)
+{
+
+	auto PlayerController = Cast<APlayerController>(GetController());
+
+	if (EndWidget == nullptr)
+		EndWidget = CreateWidget<UEndWidget>(PlayerController, EndWidgetClass);
+
+	if (PlayerController == nullptr) return;
+	if (EndWidget == nullptr) return;
+
+	UGameplayStatics::SetGamePaused(this, true);
+	EndWidget->AddToViewport();
+	EndWidget->UpdateResultText(ResultText);
+
+	FInputModeUIOnly MyInputMode;
+	MyInputMode.SetWidgetToFocus(EndWidget->TakeWidget());
+	PlayerController->SetInputMode(MyInputMode);
+	PlayerController->SetShowMouseCursor(true);
+	
+
+}
+
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -43,7 +75,13 @@ void APlayerCharacter::BeginPlay()
 		PlayerWidget->UpdateHealthBar_Player(HealthComponent->Health, HealthComponent->MaxHealth);
 		PlayerWidget->UpdateStaminaBar_Player(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
 		PlayerWidget->HideEnemyStats();
+		PlayerWidget->UpdateKills(Kills);
 	}
+
+	if (BaseCharacterData == nullptr) return;
+	BackgroundAudio = UGameplayStatics::SpawnSound2D(this, BaseCharacterData->BackgroundThemeSound);
+	if (BackgroundAudio)
+		BackgroundAudio->SetVolumeMultiplier(BaseCharacterData->BackgroundAudioVolume);
 }
 
 void APlayerCharacter::HandleTakePointDamage(AActor* DamagedActor, float Damage, AController* InstigatedBy, FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser)
@@ -60,12 +98,23 @@ void APlayerCharacter::HandleDead()
 		PlayerWidget->RemoveFromParent();
 	auto PlayerController = Cast<APlayerController>(GetController());
 	DisableInput(PlayerController);
+	ShowEndWidget(LoseText);
+
+}
+
+void APlayerCharacter::HandleAttacked(const FVector& ShotFromDirection)
+{
+	Super::HandleAttacked(ShotFromDirection);
+	auto CameraManager = UGameplayStatics::GetPlayerCameraManager(this, 0);
+	if(CameraManager && BaseCharacterData)
+		CameraManager->StartCameraShake(BaseCharacterData->CameraShakeClass, BaseCharacterData->ShakeScale);
 }
 
 void APlayerCharacter::I_EnterCombat(AActor* TargetActor)
 {
 	Super::I_EnterCombat(TargetActor);
 	ShowTargetStats();
+	PlayThemeSound_Combat();
 }
 
 void APlayerCharacter::I_ExitCombat()
@@ -77,6 +126,20 @@ void APlayerCharacter::I_ExitCombat()
 		PlayerWidget->HideEnemyStats();
 
 	AttackInterface_Target->I_HandleExitCombat();
+
+	PlayThemeSound_Background();
+}
+
+void APlayerCharacter::PlayThemeSound_Combat()
+{
+	if (BackgroundAudio && BaseCharacterData)
+		BackgroundAudio->SetSound(BaseCharacterData->CombatThemeSound);
+}
+
+void APlayerCharacter::PlayThemeSound_Background()
+{
+	if (BackgroundAudio && BaseCharacterData)
+		BackgroundAudio->SetSound(BaseCharacterData->BackgroundThemeSound);
 }
 
 void APlayerCharacter::ShowTargetStats()
@@ -101,7 +164,16 @@ void APlayerCharacter::I_HitTarget(float Health_Target, float MaxHealth_Target)
 void APlayerCharacter::I_HandleTargetDestroyed()
 {
 	if (PlayerWidget)
+	{
 		PlayerWidget->HideEnemyStats();
+		Kills++;
+		PlayerWidget->UpdateKills(Kills);
+	}
+	PlayThemeSound_Background();
+	NotStrafe();
+
+	if (Kills >= 1)
+		ShowEndWidget(WinText);
 }
 
 void APlayerCharacter::I_HandleAttackSuccess()

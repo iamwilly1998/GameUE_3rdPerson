@@ -31,6 +31,8 @@ public:
 	// Attack Interface
 #pragma region Attack Interface
 	virtual void I_EnterCombat(AActor* TargetActor) override;
+	virtual void I_ReceiveCombat(AActor* TargetActor) override;
+
 	virtual void I_HandleExitCombat() override;
 	virtual void I_ExitCombat() override;
 
@@ -74,6 +76,7 @@ protected:
 	virtual void HandleDead();
 	virtual void Strafe();
 	virtual void NotStrafe();
+	virtual void HandleAttacked(const FVector& ShotFromDirection);
 
 
 
@@ -87,7 +90,6 @@ private:
 	void HandleHitSomething(const FHitResult& HitResult);
 
 	void SpawnHitImpact(const FVector& HitLocation);
-	void HandleAttacked(const FVector& ShotFromDirection);
 
 public:
 	bool bIsStrafing = false;

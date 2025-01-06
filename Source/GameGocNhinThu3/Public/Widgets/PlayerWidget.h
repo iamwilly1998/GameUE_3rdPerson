@@ -24,6 +24,7 @@ public:
 
 	void ShowEnemyStats();
 	void HideEnemyStats();	
+	void UpdateKills(int Kill);
 
 private:
 	UPROPERTY(meta = (BindWidget))
@@ -42,4 +43,6 @@ private:
 	UTextBlock* StaminaText_Enemy;
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* StaminaText_Player;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* Kills_Point;
 };

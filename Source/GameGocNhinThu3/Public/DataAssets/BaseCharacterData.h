@@ -97,4 +97,17 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Speed")
 	float PatrolSpeed = 300.0f;
 	
+	// Sound
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase* BackgroundThemeSound;
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase* CombatThemeSound;
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	float BackgroundAudioVolume = 0.5f;
+
+	// Camera Shake
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Shake")
+	TSubclassOf<UCameraShakeBase> CameraShakeClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Shake")
+	float ShakeScale = 30.0f;
 };

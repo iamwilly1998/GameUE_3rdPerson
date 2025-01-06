@@ -19,7 +19,9 @@ AEnemyAIController::AEnemyAIController()
 	AIEnemySightConfig->SightRadius = 2500.0f;
 	AIEnemySightConfig->LoseSightRadius = 2500.0f;
 	AIEnemySightConfig->PeripheralVisionAngleDegrees = 55.0f;
-	AIEnemySightConfig->DetectionByAffiliation.bDetectNeutrals = true;
+	AIEnemySightConfig->DetectionByAffiliation.bDetectFriendlies = false;
+	AIEnemySightConfig->DetectionByAffiliation.bDetectNeutrals = false;
+	AIEnemySightConfig->DetectionByAffiliation.bDetectEnemies = true;
 
 	AIPerceptionComponent->ConfigureSense(*AIEnemySightConfig);
 }
@@ -28,6 +30,7 @@ void AEnemyAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 	PossessedPawn = InPawn;
+
 	EnemyInterface = TScriptInterface<IEnemyInterface>(InPawn);
 
 	RunBehaviorTree(BehaviorTree);
@@ -72,10 +75,15 @@ void AEnemyAIController::HandleTargetPerceptionUpdate(AActor* Actor, FAIStimulus
 
 void AEnemyAIController::HandleSeePlayer(AActor* Actor)
 {
-	DebugColor = FLinearColor::Red;
+	CombatMode(Actor);
+
 	if (EnemyInterface)
 		EnemyInterface->I_HandleSeePlayer(Actor);
+}
 
+void AEnemyAIController::CombatMode(AActor* Actor)
+{
+	DebugColor = FLinearColor::Red;
 	if (Blackboard)
 	{
 		// is combat, bool
@@ -96,7 +104,7 @@ void AEnemyAIController::UpdatePatrolLocation()
 	if (Blackboard && EnemyInterface)
 		Blackboard->SetValueAsVector(
 			Key_PatrolLocation
-			, EnemyInterface->I_GetTargetLocation());
+			, EnemyInterface->I_GetPatrolLocation());
 }
 
 void AEnemyAIController::CheckDistance(AActor* AIACtor, AActor* PlayerActor, float AttackRange)
@@ -136,7 +144,8 @@ void AEnemyAIController::BackToPatrol()
 		ExitCombatTimer, 
 		this, 
 		&AEnemyAIController::ExitCombatTimerFinished, 
-		ExitCombatSecond);
+		ExitCombatSecond
+	);
 	SetFocus(nullptr);
 }
 

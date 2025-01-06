@@ -62,3 +62,10 @@ void UPlayerWidget::HideEnemyStats()
 		StaminaText_Enemy->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
+
+void UPlayerWidget::UpdateKills(int Kill)
+{
+	FString KillString = FString::Printf(TEXT("%d"),Kill);
+	if (Kills_Point)
+		Kills_Point->SetText(FText::FromString(KillString));
+}

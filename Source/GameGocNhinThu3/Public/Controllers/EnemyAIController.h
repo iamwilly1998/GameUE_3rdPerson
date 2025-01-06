@@ -41,6 +41,8 @@ private:
 
 	void HandleSeePlayer(AActor* Actor);
 
+	void CombatMode(AActor* Actor);
+
 	void ExitCombatTimerFinished();
 
 public:
