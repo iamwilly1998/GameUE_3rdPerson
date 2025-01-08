@@ -7,6 +7,8 @@
 #include "Enum/AttackType.h"
 #include "BaseCharacterData.generated.h"
 
+class UAnimMontage;
+class UParticleSystem;
 class USoundBase;
 /**
  * 
@@ -97,7 +99,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Speed")
 	float PatrolSpeed = 300.0f;
 	
-	// Sound
+	// Theme Sound
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	USoundBase* BackgroundThemeSound;
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
@@ -105,9 +107,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	float BackgroundAudioVolume = 0.5f;
 
-	// Camera Shake
-	UPROPERTY(EditDefaultsOnly, Category = "Camera Shake")
+	// Shake Camera
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TSubclassOf<UCameraShakeBase> CameraShakeClass;
-	UPROPERTY(EditDefaultsOnly, Category = "Camera Shake")
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	float ShakeScale = 30.0f;
 };

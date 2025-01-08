@@ -17,13 +17,14 @@ class GAMEGOCNHINTHU3_API AEnemyCharacter : public ABaseCharacter, public IEnemy
 	GENERATED_BODY()
 
 public:
+	virtual void Destroyed() override;
 	// Attack Interface
-
+	virtual void I_HandleTargetDestroyed() override;
+	virtual void I_HandleExitCombat() override;
+	virtual void I_ExitCombat() override;
 
 	virtual void I_EnterCombat(AActor* TargetActor) override;
 	virtual void I_ReceiveCombat(AActor* TargetActor) override;
-
-	virtual void I_HandleExitCombat() override;
 
 	virtual void I_RequestAttack() override;
 	virtual void I_HandleAttackSuccess();
@@ -33,7 +34,6 @@ public:
 	//Enemy Interface
 	virtual FVector I_GetPatrolLocation() override;
 	virtual void I_HandleSeePlayer(AActor* PlayerActor) override;
-	virtual void Destroyed() override;
 
 protected:
 	virtual void BeginPlay() override;

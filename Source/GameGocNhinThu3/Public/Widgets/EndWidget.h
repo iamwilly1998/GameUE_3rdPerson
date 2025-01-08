@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -15,18 +14,23 @@ class GAMEGOCNHINTHU3_API UEndWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	void UpdateResultText(FText Text);
 	virtual bool Initialize() override;
+	void UpdateResultText(FText NewText);
+
 private:
 	UFUNCTION()
 	void PlayAgainClicked();
+
 	UFUNCTION()
-	void ExitClicked();
+	void QuitClicked();
+
 private:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ResultText;
+
 	UPROPERTY(meta = (BindWidget))
 	UButton* PlayAgainButton;
+
 	UPROPERTY(meta = (BindWidget))
 	UButton* ExitButton;
 };

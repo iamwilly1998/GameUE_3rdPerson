@@ -59,16 +59,11 @@ void ABaseCharacter::ChangeWalkSpeed(float WalkSpeed)
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
-// Called when the game starts or when spawned
-void ABaseCharacter::BeginPlay()
+void ABaseCharacter::I_ReceiveCombat(AActor* TargetActor)
 {
-	Super::BeginPlay();
-	OnTakePointDamage.AddDynamic(this, &ABaseCharacter::HandleTakePointDamage);
-	if (BaseCharacterData)
-		ChangeWalkSpeed(BaseCharacterData->DefaultSpeed);
+	AttackInterface_Target = TScriptInterface<IAttackInterface>(TargetActor);
+	Strafe();
 }
-
-#pragma region AttackInterface
 
 void ABaseCharacter::I_EnterCombat(AActor* TargetActor)
 {
@@ -77,11 +72,34 @@ void ABaseCharacter::I_EnterCombat(AActor* TargetActor)
 	Strafe();
 }
 
-void ABaseCharacter::I_ReceiveCombat(AActor* TargetActor)
+void ABaseCharacter::I_HandleExitCombat()
 {
-	AttackInterface_Target = TScriptInterface<IAttackInterface>(TargetActor);
+	NotStrafe();
+}
 
-	Strafe();
+void ABaseCharacter::I_ExitCombat()
+{
+	NotStrafe();
+}
+
+float ABaseCharacter::I_GetHealth() const
+{
+	return HealthComponent ? HealthComponent->Health : 0.0f;
+}
+
+float ABaseCharacter::I_GetMaxHealth() const
+{
+	return HealthComponent ? HealthComponent->MaxHealth : 0.0f;
+}
+
+float ABaseCharacter::I_GetStamina() const
+{
+	return StaminaComponent ? StaminaComponent->Stamina : 0.0f;
+}
+
+float ABaseCharacter::I_GetMaxStamina() const
+{
+	return StaminaComponent ? StaminaComponent->MaxStamina : 0.0f;
 }
 
 void ABaseCharacter::Strafe()
@@ -106,15 +124,16 @@ void ABaseCharacter::NotStrafe()
 	bIsStrafing = false;
 }
 
-void ABaseCharacter::I_HandleExitCombat()
+void ABaseCharacter::BeginPlay()
 {
-	NotStrafe();
+	Super::BeginPlay();
+	OnTakePointDamage.AddDynamic(this, &ABaseCharacter::HandleTakePointDamage);
+	if (BaseCharacterData)
+		ChangeWalkSpeed(BaseCharacterData->DefaultSpeed);
 }
 
-void ABaseCharacter::I_ExitCombat()
-{
-	NotStrafe();
-}
+#pragma region AttackInterface
+
 
 void ABaseCharacter::I_PlayAttackMontage(UAnimMontage* AttackMontage)
 {
@@ -123,6 +142,7 @@ void ABaseCharacter::I_PlayAttackMontage(UAnimMontage* AttackMontage)
 
 void ABaseCharacter::I_PlayAttackingSound()
 {
+
 	if (BaseCharacterData)
 		UGameplayStatics::PlaySoundAtLocation(
 			this, 
@@ -132,8 +152,6 @@ void ABaseCharacter::I_PlayAttackingSound()
 
 void ABaseCharacter::I_AN_EndAttack()
 {
-	// Attack Component
-	// bIsAttacking -> false
 	if(AttackComponent)
 		AttackComponent->AN_EndAttack();
 }
@@ -194,26 +212,6 @@ bool ABaseCharacter::I_IsInCombat() const
 	return AttackComponent->bIsAttacking;
 }
 
-float ABaseCharacter::I_GetHealth() const
-{
-	return HealthComponent ? HealthComponent->Health : 0.0f;
-}
-
-float ABaseCharacter::I_GetMaxHealth() const
-{
-	return HealthComponent ? HealthComponent->MaxHealth : 0.0f;
-}
-
-float ABaseCharacter::I_GetStamina() const
-{
-	return StaminaComponent ? StaminaComponent->Stamina : 0.0f;
-}
-
-float ABaseCharacter::I_GetMaxStamina() const
-{
-	return StaminaComponent ? StaminaComponent->MaxStamina : 0.0f;
-}
-
 void ABaseCharacter::I_ANS_TraceHit()
 {
 	if (AttackComponent)
@@ -243,7 +241,10 @@ void ABaseCharacter::HandleHitSomething(const FHitResult& HitResult)
 		return;
 
 	auto HitActor = HitResult.GetActor();
-	auto AttackDirection = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), HitActor->GetActorLocation());
+
+	if (HitActor == nullptr) return;
+
+	const auto AttackDirection = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), HitActor->GetActorLocation());
 
 	UGameplayStatics::ApplyPointDamage(
 		HitActor,
@@ -257,8 +258,7 @@ void ABaseCharacter::HandleHitSomething(const FHitResult& HitResult)
 		);
 }
 
-void ABaseCharacter::HandleTakePointDamage(AActor* DamagedActor, 
-	float Damage, 
+void ABaseCharacter::HandleTakePointDamage(AActor* DamagedActor, float Damage, 
 	AController* InstigatedBy, 
 	FVector HitLocation, 
 	UPrimitiveComponent* FHitComponent, 
@@ -272,41 +272,12 @@ void ABaseCharacter::HandleTakePointDamage(AActor* DamagedActor,
 	if (HealthComponent)
 		HealthComponent->UpdateHealthByDamage(Damage);
 
-	
-	
 	// mau > 0 -> attacked
 	// mau <= 0 -> death
 	if (HealthComponent->Health > 0.0f)
 		HandleAttacked(ShotFromDirection);
 	else
 		HandleDead();
-}
-
-void ABaseCharacter::HandleDead()
-{
-	// Death Sound
-	// Death Animation
-	if (BaseCharacterData == nullptr)
-		return;
-	UGameplayStatics::PlaySoundAtLocation(
-		this,
-		BaseCharacterData->DeadSound,
-		GetActorLocation()
-	);
-
-	float DeadMontageSecond = PlayAnimMontage(BaseCharacterData->DeadMontage);
-	CombatState = ECombatState::Dead;
-
-	if (GetCharacterMovement())
-		GetCharacterMovement()->StopMovementImmediately();
-
-	if (GetCapsuleComponent() && GetMesh()) 
-	{
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
-
-	SetLifeSpan(DeadMontageSecond);
 }
 
 void ABaseCharacter::HandleAttacked(const FVector& ShotFromDirection)
@@ -323,6 +294,33 @@ void ABaseCharacter::HandleAttacked(const FVector& ShotFromDirection)
 	PlayAnimMontage(GetCorrectHitReactMontage(ShotFromDirection));
 	CombatState = ECombatState::Attacked;
 
+}
+
+void ABaseCharacter::HandleDead()
+{
+	// Death Sound
+	// Death Animation
+	if (BaseCharacterData == nullptr)
+		return;
+	UGameplayStatics::PlaySoundAtLocation(
+		this,
+		BaseCharacterData->DeadSound,
+		GetActorLocation());
+
+	float DeadMontageSecond = PlayAnimMontage(BaseCharacterData->DeadMontage);
+
+	CombatState = ECombatState::Dead;
+
+	if (GetCharacterMovement())
+		GetCharacterMovement()->StopMovementImmediately();
+
+	if (GetCapsuleComponent() && GetMesh()) 
+	{
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	SetLifeSpan(DeadMontageSecond);
 }
 
 void ABaseCharacter::SpawnHitImpact(const FVector& HitLocation)

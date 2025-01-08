@@ -4,34 +4,35 @@
 #include "Widgets/EndWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
+
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
-void UEndWidget::UpdateResultText(FText Text)
-{
-	if (ResultText)
-		ResultText->SetText(Text);
-}
-
 bool UEndWidget::Initialize()
 {
-	if(Super::Initialize() == false)
+	if (Super::Initialize() == false)
 		return false;
-	if(PlayAgainButton)
+
+	if (PlayAgainButton)
 		PlayAgainButton->OnClicked.AddDynamic(this, &UEndWidget::PlayAgainClicked);
-	if(ExitButton)
-		ExitButton->OnClicked.AddDynamic(this, &UEndWidget::ExitClicked);
+
+	if (ExitButton)
+		ExitButton->OnClicked.AddDynamic(this, &UEndWidget::QuitClicked);
+
 	return true;
+}
+
+void UEndWidget::UpdateResultText(FText NewText)
+{
+	if (ResultText)
+		ResultText->SetText(NewText);
 }
 
 void UEndWidget::PlayAgainClicked()
 {
 	if (GetOwningPlayer() == nullptr) return;
 
-	UGameplayStatics::SetGamePaused(GetWorld(), false);
-
 	FInputModeGameOnly MyInputMode;
-
 	GetOwningPlayer()->SetInputMode(MyInputMode);
 	GetOwningPlayer()->SetShowMouseCursor(false);
 
@@ -40,12 +41,14 @@ void UEndWidget::PlayAgainClicked()
 	UGameplayStatics::OpenLevel(GetWorld(), LevelName);
 }
 
-void UEndWidget::ExitClicked()
+void UEndWidget::QuitClicked()
 {
-	TEnumAsByte<EQuitPreference::Type> ExitPreference = EQuitPreference::Quit;
+	TEnumAsByte<EQuitPreference::Type> QuitPreference = EQuitPreference::Quit;
+
 	UKismetSystemLibrary::QuitGame(
 		GetWorld(),
-		UGameplayStatics::GetPlayerController(GetWorld(),0),
-		ExitPreference, true
+		UGameplayStatics::GetPlayerController(GetWorld(), 0),
+		QuitPreference,
+		true
 	);
 }

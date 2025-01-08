@@ -9,8 +9,13 @@
 
 
 class UAttackComponent;
+
 class UHealthComponent;
 class UStaminaComponent;
+
+class UInputMappingContext;
+class UInputAction;
+struct FInputActionValue;
 class UEnhancedInputData;
 class UBaseCharacterData;
 
@@ -21,7 +26,6 @@ class GAMEGOCNHINTHU3_API ABaseCharacter : public ACharacter, public IAttackInte
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	ABaseCharacter();
 	virtual void PostInitializeComponents() override;
 	//virtual void Tick(float DeltaSeconds) override;
@@ -30,9 +34,8 @@ public:
 
 	// Attack Interface
 #pragma region Attack Interface
-	virtual void I_EnterCombat(AActor* TargetActor) override;
 	virtual void I_ReceiveCombat(AActor* TargetActor) override;
-
+	virtual void I_EnterCombat(AActor* TargetActor) override;
 	virtual void I_HandleExitCombat() override;
 	virtual void I_ExitCombat() override;
 
@@ -45,11 +48,13 @@ public:
 	virtual FVector I_GetSocketLocation(const FName& SocketName) const override;
 	virtual void I_ANS_TraceHit() override;
 	virtual void I_ANS_BeginTraceHit() override;
+
 	virtual void I_RequestAttack() override;
 	virtual void I_HandleAttackSuccess() override;
 	virtual bool I_DoesReadyToAttack() const override;
 	virtual bool I_HasEnoughStamina(float Cost) const override;
 	virtual bool I_IsInCombat() const override;
+
 	virtual float I_GetHealth() const override;
 	virtual float I_GetMaxHealth() const override;
 	virtual float I_GetStamina() const override;
@@ -62,9 +67,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
-	virtual void HandleTakePointDamage(
-		AActor* DamagedActor,
-		float Damage,
+	virtual void HandleTakePointDamage(AActor* DamagedActor,float Damage,
 		class AController* InstigatedBy,
 		FVector HitLocation,
 		class UPrimitiveComponent* FHitComponent,
@@ -74,12 +77,10 @@ protected:
 		AActor* DamageCauser);
 
 	virtual void HandleDead();
-	virtual void Strafe();
-	virtual void NotStrafe();
 	virtual void HandleAttacked(const FVector& ShotFromDirection);
 
-
-
+	virtual void Strafe();
+	virtual void NotStrafe();
 
 private:
 	// Attack Direction
@@ -116,11 +117,7 @@ protected:
 	UEnhancedInputData* EnhancedInputData;
 
 private:
-
 	ECombatState CombatState = ECombatState::Ready;
-
-	
-
 
 	// Getter vs Setter
 public:

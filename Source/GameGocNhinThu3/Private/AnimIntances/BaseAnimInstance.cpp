@@ -31,7 +31,7 @@ void UBaseAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	// Enum
 	// Ready , Attacked
 	Character->GetCombatState();
-	bShouldBlendLowerUpper = bShouldMove;
+	bShouldBlendLowerUpper = GroundSpeed > 0.0f && Character->GetCombatState() == ECombatState::Ready;	
 	/*
 	* Strafing
 	*/

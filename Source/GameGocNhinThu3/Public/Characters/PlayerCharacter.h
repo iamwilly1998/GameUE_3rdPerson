@@ -6,15 +6,10 @@
 #include "Characters/BaseCharacter.h"
 #include "PlayerCharacter.generated.h"
 
-class UPlayerWidget;
 class USpringArmComponent;
 class UCameraComponent;
-class UInputMappingContext;
-class UInputAction;
-class UEnhancedInputData;
+class UPlayerWidget;
 class UEndWidget;
-
-struct FInputActionValue;
 
 /**
  * 
@@ -27,7 +22,9 @@ public:
 	APlayerCharacter();
 	virtual void Destroyed() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
 	// Attack Interface
+	virtual void I_ReceiveCombat(AActor* TargetActor) override;
 	virtual void I_EnterCombat(AActor* TargetActor) override;
 	virtual void I_ExitCombat() override;
 	virtual void I_HitTarget(float Health_Target, float MaxHealth_Target) override;
@@ -64,6 +61,7 @@ private:
 	void ExitCombatPressed();
 	void ShowTargetStats();
 	void ShowEndWidget(FText ResultText);
+
 	void PlayThemeSound_Background();
 	void PlayThemeSound_Combat();
 
@@ -72,6 +70,7 @@ private:
 	FText WinText = FText::FromString(TEXT("Win"));
 
 	int Kills = 0;
+
 	UPROPERTY()
 	UAudioComponent* BackgroundAudio;
 
@@ -89,6 +88,7 @@ private:
 
 	UPROPERTY()
 	UPlayerWidget* PlayerWidget;
+
 	UPROPERTY()
 	UEndWidget* EndWidget;
 };

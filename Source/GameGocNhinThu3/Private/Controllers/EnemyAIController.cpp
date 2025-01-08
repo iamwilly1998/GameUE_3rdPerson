@@ -4,21 +4,28 @@
 #include "Controllers/EnemyAIController.h"
 #include "Interfaces/EnemyInterface.h"
 #include "BehaviorTree/BlackboardComponent.h"
+
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
+
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+
 #include "Enum/AIState.h"
 
 
 AEnemyAIController::AEnemyAIController()
 {
+	SetGenericTeamId(GetGenericTeamId());
+	// AI Perception Component
 	AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AI Perception Component"));
 	// Sight config
 	AIEnemySightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("AI Enemy Sight Config"));
+
 	AIEnemySightConfig->SightRadius = 2500.0f;
 	AIEnemySightConfig->LoseSightRadius = 2500.0f;
 	AIEnemySightConfig->PeripheralVisionAngleDegrees = 55.0f;
+
 	AIEnemySightConfig->DetectionByAffiliation.bDetectFriendlies = false;
 	AIEnemySightConfig->DetectionByAffiliation.bDetectNeutrals = false;
 	AIEnemySightConfig->DetectionByAffiliation.bDetectEnemies = true;
@@ -30,7 +37,6 @@ void AEnemyAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 	PossessedPawn = InPawn;
-
 	EnemyInterface = TScriptInterface<IEnemyInterface>(InPawn);
 
 	RunBehaviorTree(BehaviorTree);
@@ -81,9 +87,11 @@ void AEnemyAIController::HandleSeePlayer(AActor* Actor)
 		EnemyInterface->I_HandleSeePlayer(Actor);
 }
 
+
 void AEnemyAIController::CombatMode(AActor* Actor)
 {
 	DebugColor = FLinearColor::Red;
+
 	if (Blackboard)
 	{
 		// is combat, bool
@@ -91,6 +99,7 @@ void AEnemyAIController::CombatMode(AActor* Actor)
 		// player actor
 		Blackboard->SetValueAsObject(Key_PlayerActor, Actor);
 	}
+
 	// Remove Dynamic
 	if (AIPerceptionComponent && AIPerceptionComponent->OnTargetPerceptionUpdated.IsBound())
 	{
@@ -102,9 +111,7 @@ void AEnemyAIController::CombatMode(AActor* Actor)
 void AEnemyAIController::UpdatePatrolLocation()
 {
 	if (Blackboard && EnemyInterface)
-		Blackboard->SetValueAsVector(
-			Key_PatrolLocation
-			, EnemyInterface->I_GetPatrolLocation());
+		Blackboard->SetValueAsVector(Key_PatrolLocation, EnemyInterface->I_GetPatrolLocation());
 }
 
 void AEnemyAIController::CheckDistance(AActor* AIACtor, AActor* PlayerActor, float AttackRange)
@@ -114,17 +121,19 @@ void AEnemyAIController::CheckDistance(AActor* AIACtor, AActor* PlayerActor, flo
 		BackToPatrol();
 		return;
 	}
+
 	if (bIsRegenStamina) return;
 
-	if (AIACtor == nullptr || PlayerActor == nullptr)
-		return;
+	if (AIACtor == nullptr) return;
+
 	const auto Distance_AIVsPlayer = AIACtor->GetDistanceTo(PlayerActor);
+
 	if (Distance_AIVsPlayer <= AttackRange)
 	{
 		if(Blackboard)
 			Blackboard->SetValueAsEnum(Key_AIState, (uint8)EAIState::Attack);
-		}
-		else
+	}
+	else
 	{
 		if (Blackboard)
 			Blackboard->SetValueAsEnum(Key_AIState, (uint8)EAIState::Combat);
@@ -135,6 +144,7 @@ void AEnemyAIController::BackToPatrol()
 {
 	if (Blackboard)
 		Blackboard->SetValueAsEnum(Key_AIState, (uint8)EAIState::Patrol);
+
 	DebugColor = FLinearColor::Gray;
 
 	if (GetWorldTimerManager().IsTimerActive(ExitCombatTimer))
@@ -144,15 +154,17 @@ void AEnemyAIController::BackToPatrol()
 		ExitCombatTimer, 
 		this, 
 		&AEnemyAIController::ExitCombatTimerFinished, 
-		ExitCombatSecond
-	);
+		ExitCombatSecond);
+
 	SetFocus(nullptr);
 }
 
 void AEnemyAIController::StartRegenStamina(float Stamina)
 {
 	bIsRegenStamina = true;
+
 	TargetStamina = Stamina;
+
 	if (Blackboard)
 		Blackboard->SetValueAsEnum(Key_AIState, (uint8)EAIState::Regen);
 }
@@ -160,6 +172,7 @@ void AEnemyAIController::StartRegenStamina(float Stamina)
 void AEnemyAIController::RegenToCombat()
 {
 	bIsRegenStamina = false;
+
 	if (Blackboard)
 		Blackboard->SetValueAsEnum(Key_AIState, (uint8)EAIState::Combat);
 }
@@ -167,18 +180,44 @@ void AEnemyAIController::RegenToCombat()
 void AEnemyAIController::UpdateRegenLocation(AActor* AIACtor, AActor* PlayerActor, float RegenRange)
 {
 	// C = A + (h * distance)
-	if (PlayerActor == nullptr || AIACtor == nullptr)
-		return;
+	if (PlayerActor == nullptr || AIACtor == nullptr) return;
+
 	const auto Direction_Player_AI = UKismetMathLibrary::GetDirectionUnitVector(PlayerActor->GetActorLocation(), AIACtor->GetActorLocation());
+
 	const auto RegenLocation = PlayerActor->GetActorLocation() + (Direction_Player_AI * RegenRange);
 
 	if(Blackboard)
 		Blackboard->SetValueAsVector(Key_RegenLocation, RegenLocation);
 }
 
+ETeamAttitude::Type AEnemyAIController::GetTeamAttitudeTowards(const AActor& Other) const
+{
+	if (APawn const* OtherPawn = Cast<APawn>(&Other))
+	{
+		if (auto const TeamAgent = Cast<IGenericTeamAgentInterface>(OtherPawn->GetController()))
+		{
+			if (TeamAgent->GetGenericTeamId() == GetGenericTeamId())
+			{
+				return ETeamAttitude::Friendly;
+			}
+			else
+			{
+				return ETeamAttitude::Hostile;
+			}
+		}
+	}
+	return ETeamAttitude::Neutral;
+}
+
+FGenericTeamId AEnemyAIController::GetGenericTeamId() const
+{
+	return TeamId;
+}
+
 void AEnemyAIController::ExitCombatTimerFinished()
 {
 	DebugColor = FLinearColor::Green;
+
 	if (AIPerceptionComponent && AIPerceptionComponent->OnTargetPerceptionUpdated.IsBound() == false)
 	{
 		AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyAIController::HandleTargetPerceptionUpdate);

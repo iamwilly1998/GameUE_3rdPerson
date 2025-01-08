@@ -7,14 +7,15 @@
 
 #include "Components/HealthComponent.h"
 #include "Components/StaminaComponent.h"
-#include "DataAssets/BaseCharacterData.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "Camera/CameraComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "DataAssets/EnhancedInputData.h"
 #include "Components/AttackComponent.h"	
-#include "Kismet/GameplayStatics.h"
 #include "Components/AudioComponent.h"
+
+#include "DataAssets/BaseCharacterData.h"
+#include "DataAssets/EnhancedInputData.h"
+
+#include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Camera/CameraComponent.h"
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
@@ -34,14 +35,148 @@ APlayerCharacter::APlayerCharacter()
 
 }
 
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	CharacterAddMappingContext();
+
+	// Cast Player input component into enhanced input component
+	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+	// IA_Look -> Event Func -> Bind
+	if (EnhancedInputData == nullptr)
+		return;
+
+	EnhancedInputComponent->BindAction(EnhancedInputData->IA_LookAround, ETriggerEvent::Triggered, this, &APlayerCharacter::LookAround);
+	EnhancedInputComponent->BindAction(EnhancedInputData->IA_Moving, ETriggerEvent::Triggered, this, &APlayerCharacter::Moving);
+	EnhancedInputComponent->BindAction(EnhancedInputData->IA_Attack, ETriggerEvent::Started, this, &APlayerCharacter::AttackPressed);
+	EnhancedInputComponent->BindAction(EnhancedInputData->IA_StrongAttack, ETriggerEvent::Started, this, &APlayerCharacter::StrongAttackPressed);
+	EnhancedInputComponent->BindAction(EnhancedInputData->IA_ExitCombat, ETriggerEvent::Started, this, &APlayerCharacter::ExitCombatPressed);
+
+}
+
+void APlayerCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	PlayerWidget = CreateWidget<UPlayerWidget>(GetWorld(), PlayerWidgetClass);
+
+	if (PlayerWidget && HealthComponent)
+	{
+		PlayerWidget->AddToViewport();
+		PlayerWidget->UpdateHealthBar_Player
+		(HealthComponent->Health, HealthComponent->MaxHealth);
+
+		PlayerWidget->UpdateStaminaBar_Player
+		(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
+
+		PlayerWidget->HideEnemyStats();
+
+		PlayerWidget->UpdateKills(Kills);
+
+	}
+	// game play statics
+	if (BaseCharacterData == nullptr) return;
+	BackgroundAudio = UGameplayStatics::SpawnSound2D(this, BaseCharacterData->BackgroundThemeSound);
+
+	if (BackgroundAudio)
+		BackgroundAudio->SetVolumeMultiplier(BaseCharacterData->BackgroundAudioVolume);
+}
+
 void APlayerCharacter::Destroyed()
 {
+	if (AttackInterface_Target)
+		AttackInterface_Target->I_HandleTargetDestroyed();
+
 	Super::Destroyed();
+}
+
+void APlayerCharacter::HandleTakePointDamage(AActor* DamagedActor, float Damage, AController* InstigatedBy, FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser)
+{
+	Super::HandleTakePointDamage(DamagedActor, Damage, InstigatedBy, HitLocation, FHitComponent, BoneName, ShotFromDirection, DamageType, DamageCauser);
+
+	if (PlayerWidget && HealthComponent)
+		PlayerWidget->UpdateHealthBar_Player(HealthComponent->Health, HealthComponent->MaxHealth);
+}
+
+void APlayerCharacter::HandleDead()
+{
+	Super::HandleDead();
+
+	if(PlayerWidget)
+		PlayerWidget->RemoveFromParent();
+
+	auto PlayerController = Cast<APlayerController>(GetController());
+	DisableInput(PlayerController);
+
+	ShowEndWidget(LoseText);
+}
+
+void APlayerCharacter::HandleAttacked(const FVector& ShotFromDirection)
+{
+	Super::HandleAttacked(ShotFromDirection);
+	// shake camera
+	// camera manager
+	auto CameraManager = UGameplayStatics::GetPlayerCameraManager(this, 0);
+
+	if (CameraManager && BaseCharacterData)
+	{
+		CameraManager->StartCameraShake(
+			BaseCharacterData->CameraShakeClass,
+			BaseCharacterData->ShakeScale
+		);
+	}
+}
+
+void APlayerCharacter::I_EnterCombat(AActor* TargetActor)
+{
+	Super::I_EnterCombat(TargetActor);
+
+	ShowTargetStats();
+
+	PlayThemeSound_Combat();
+}
+
+void APlayerCharacter::I_ReceiveCombat(AActor* TargetActor)
+{
+	Super::I_ReceiveCombat(TargetActor);
+
+	ShowTargetStats();
+
+	PlayThemeSound_Combat();
+}
+
+void APlayerCharacter::I_ExitCombat()
+{
+	Super::I_ExitCombat();
+
+	// Hide enemy health
+	// Player -> Exit combat -> noti to enemy ->  patrol
+	if (PlayerWidget)
+		PlayerWidget->HideEnemyStats();
+
+	if (AttackInterface_Target)
+		AttackInterface_Target->I_HandleExitCombat();
+
+	PlayThemeSound_Background();
+}
+
+void APlayerCharacter::ShowTargetStats()
+{
+	if (AttackInterface_Target == nullptr) return;
+	
+	if (PlayerWidget)
+	{
+		PlayerWidget->ShowEnemyStats();
+
+		PlayerWidget->UpdateHealthBar_Enemy(AttackInterface_Target->I_GetHealth(), AttackInterface_Target->I_GetMaxHealth());
+
+		PlayerWidget->UpdateStaminaBar_Enemy(AttackInterface_Target->I_GetStamina(), AttackInterface_Target->I_GetMaxStamina());
+	}
 }
 
 void APlayerCharacter::ShowEndWidget(FText ResultText)
 {
-
 	auto PlayerController = Cast<APlayerController>(GetController());
 
 	if (EndWidget == nullptr)
@@ -50,90 +185,17 @@ void APlayerCharacter::ShowEndWidget(FText ResultText)
 	if (PlayerController == nullptr) return;
 	if (EndWidget == nullptr) return;
 
-	UGameplayStatics::SetGamePaused(this, true);
+	// Pause game
+	// UGameplayStatics::SetGamePaused(this, true);
+
 	EndWidget->AddToViewport();
 	EndWidget->UpdateResultText(ResultText);
 
 	FInputModeUIOnly MyInputMode;
 	MyInputMode.SetWidgetToFocus(EndWidget->TakeWidget());
+
 	PlayerController->SetInputMode(MyInputMode);
 	PlayerController->SetShowMouseCursor(true);
-	
-
-}
-
-void APlayerCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-	// Player widget
-	// World
-	PlayerWidget = CreateWidget<UPlayerWidget>(GetWorld(), PlayerWidgetClass);
-
-	if (PlayerWidget && HealthComponent)
-	{
-		PlayerWidget->AddToViewport();
-		PlayerWidget->UpdateHealthBar_Player(HealthComponent->Health, HealthComponent->MaxHealth);
-		PlayerWidget->UpdateStaminaBar_Player(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
-		PlayerWidget->HideEnemyStats();
-		PlayerWidget->UpdateKills(Kills);
-	}
-
-	if (BaseCharacterData == nullptr) return;
-	BackgroundAudio = UGameplayStatics::SpawnSound2D(this, BaseCharacterData->BackgroundThemeSound);
-	if (BackgroundAudio)
-		BackgroundAudio->SetVolumeMultiplier(BaseCharacterData->BackgroundAudioVolume);
-}
-
-void APlayerCharacter::HandleTakePointDamage(AActor* DamagedActor, float Damage, AController* InstigatedBy, FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser)
-{
-	Super::HandleTakePointDamage(DamagedActor, Damage, InstigatedBy, HitLocation, FHitComponent, BoneName, ShotFromDirection, DamageType, DamageCauser);
-	if (PlayerWidget && HealthComponent)
-		PlayerWidget->UpdateHealthBar_Player(HealthComponent->Health, HealthComponent->MaxHealth);
-}
-
-void APlayerCharacter::HandleDead()
-{
-	Super::HandleDead();
-	if(PlayerWidget)
-		PlayerWidget->RemoveFromParent();
-	auto PlayerController = Cast<APlayerController>(GetController());
-	DisableInput(PlayerController);
-	ShowEndWidget(LoseText);
-
-}
-
-void APlayerCharacter::HandleAttacked(const FVector& ShotFromDirection)
-{
-	Super::HandleAttacked(ShotFromDirection);
-	auto CameraManager = UGameplayStatics::GetPlayerCameraManager(this, 0);
-	if(CameraManager && BaseCharacterData)
-		CameraManager->StartCameraShake(BaseCharacterData->CameraShakeClass, BaseCharacterData->ShakeScale);
-}
-
-void APlayerCharacter::I_EnterCombat(AActor* TargetActor)
-{
-	Super::I_EnterCombat(TargetActor);
-	ShowTargetStats();
-	PlayThemeSound_Combat();
-}
-
-void APlayerCharacter::I_ExitCombat()
-{
-	Super::I_ExitCombat();
-	// Hide enemy health
-	// Player -> Exit combat -> noti to enemy ->  patrol
-	if (PlayerWidget)
-		PlayerWidget->HideEnemyStats();
-
-	AttackInterface_Target->I_HandleExitCombat();
-
-	PlayThemeSound_Background();
-}
-
-void APlayerCharacter::PlayThemeSound_Combat()
-{
-	if (BackgroundAudio && BaseCharacterData)
-		BackgroundAudio->SetSound(BaseCharacterData->CombatThemeSound);
 }
 
 void APlayerCharacter::PlayThemeSound_Background()
@@ -142,15 +204,10 @@ void APlayerCharacter::PlayThemeSound_Background()
 		BackgroundAudio->SetSound(BaseCharacterData->BackgroundThemeSound);
 }
 
-void APlayerCharacter::ShowTargetStats()
+void APlayerCharacter::PlayThemeSound_Combat()
 {
-	if (AttackInterface_Target == nullptr) return;
-	if (PlayerWidget)
-	{
-		PlayerWidget->ShowEnemyStats();
-		PlayerWidget->UpdateHealthBar_Enemy(AttackInterface_Target->I_GetHealth(), AttackInterface_Target->I_GetMaxHealth());
-		PlayerWidget->UpdateStaminaBar_Enemy(AttackInterface_Target->I_GetStamina(), AttackInterface_Target->I_GetMaxStamina());
-	}
+	if (BackgroundAudio && BaseCharacterData)
+		BackgroundAudio->SetSound(BaseCharacterData->CombatThemeSound);
 }
 
 void APlayerCharacter::I_HitTarget(float Health_Target, float MaxHealth_Target)
@@ -163,12 +220,14 @@ void APlayerCharacter::I_HitTarget(float Health_Target, float MaxHealth_Target)
 
 void APlayerCharacter::I_HandleTargetDestroyed()
 {
+	Kills++;
+
 	if (PlayerWidget)
 	{
 		PlayerWidget->HideEnemyStats();
-		Kills++;
 		PlayerWidget->UpdateKills(Kills);
 	}
+
 	PlayThemeSound_Background();
 	NotStrafe();
 
@@ -179,6 +238,7 @@ void APlayerCharacter::I_HandleTargetDestroyed()
 void APlayerCharacter::I_HandleAttackSuccess()
 {
 	Super::I_HandleAttackSuccess();
+
 	if (PlayerWidget && StaminaComponent)
 		PlayerWidget->UpdateStaminaBar_Player(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
 }
@@ -202,23 +262,6 @@ void APlayerCharacter::I_Target_RegenStamina(float Stamina_Target, float MaxStam
 }
 
 #pragma region Input
-
-void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	CharacterAddMappingContext();
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	// Cast Player input component into enhanced input component
-	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	// IA_Look -> Event Func -> Bind
-	if (EnhancedInputData == nullptr)
-		return;
-	EnhancedInputComponent->BindAction(EnhancedInputData->IA_LookAround, ETriggerEvent::Triggered, this, &APlayerCharacter::LookAround);
-	EnhancedInputComponent->BindAction(EnhancedInputData->IA_Moving, ETriggerEvent::Triggered, this, &APlayerCharacter::Moving);
-	EnhancedInputComponent->BindAction(EnhancedInputData->IA_Attack, ETriggerEvent::Started, this, &APlayerCharacter::AttackPressed);
-	EnhancedInputComponent->BindAction(EnhancedInputData->IA_StrongAttack, ETriggerEvent::Started, this, &APlayerCharacter::StrongAttackPressed);
-	EnhancedInputComponent->BindAction(EnhancedInputData->IA_ExitCombat, ETriggerEvent::Started, this, &APlayerCharacter::ExitCombatPressed);
-
-}
 
 void APlayerCharacter::CharacterAddMappingContext()
 {

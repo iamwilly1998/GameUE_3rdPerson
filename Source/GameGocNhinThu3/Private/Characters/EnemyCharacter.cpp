@@ -3,30 +3,37 @@
 
 #include "Characters/EnemyCharacter.h"
 #include "Interfaces/AttackInterface.h"
+
 #include "Components/HealthComponent.h"
 #include "Components/StaminaComponent.h"
 #include "Components/AttackComponent.h"
+
 #include "DataAssets/BaseCharacterData.h"
 #include "Controllers/EnemyAIController.h"
+
 
 void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
 	if (BaseCharacterData)
 		ChangeWalkSpeed(BaseCharacterData->PatrolSpeed);
 
 	EnemyAIController = Cast<AEnemyAIController>(GetController());
+
 }
 
 FVector AEnemyCharacter::I_GetPatrolLocation()
 {
-	if (PatrolPoints.IsEmpty())
+	if(PatrolPoints.IsEmpty())
 		return GetActorLocation();
+
 	if (PatrolPoints[PatrolIndex] == nullptr)
 		return GetActorLocation();
+
 	auto ReturnValue = PatrolPoints[PatrolIndex]->GetActorLocation();
+
 	PatrolIndex = (PatrolIndex + 1) % PatrolPoints.Num();
+
 	return ReturnValue;
 }
 
@@ -43,11 +50,10 @@ void AEnemyCharacter::Destroyed()
 	Super::Destroyed();
 }
 
-void AEnemyCharacter::I_HandleExitCombat()
+void AEnemyCharacter::I_HandleTargetDestroyed()
 {
-	Super::I_HandleExitCombat();
-	if (EnemyAIController)
-		EnemyAIController->BackToPatrol();
+	Super::I_HandleTargetDestroyed();
+	I_ExitCombat();
 }
 
 void AEnemyCharacter::I_EnterCombat(AActor* TargetActor)
@@ -64,7 +70,24 @@ void AEnemyCharacter::I_EnterCombat(AActor* TargetActor)
 
 void AEnemyCharacter::I_ReceiveCombat(AActor* TargetActor)
 {
-	Super::I_EnterCombat(TargetActor);
+	Super::I_ReceiveCombat(TargetActor);
+
+	if (EnemyAIController)
+		EnemyAIController->CombatMode(TargetActor);
+}
+
+void AEnemyCharacter::I_HandleExitCombat()
+{
+	Super::I_HandleExitCombat();
+	if (EnemyAIController)
+		EnemyAIController->BackToPatrol();
+}
+
+void AEnemyCharacter::I_ExitCombat()
+{
+	Super::I_ExitCombat();
+	if (EnemyAIController)
+		EnemyAIController->BackToPatrol();
 }
 
 void AEnemyCharacter::I_RequestAttack()
@@ -78,23 +101,26 @@ void AEnemyCharacter::I_RequestAttack()
 	else {
 		AttackComponent->RequestAttackType = EAttackType::LightAttack;
 	}
-
+	
 	Super::I_RequestAttack();
 }
 
 void AEnemyCharacter::I_HandleAttackSuccess()
 {
 	Super::I_HandleAttackSuccess();
+
 	if (AttackInterface_Target && StaminaComponent)
 		AttackInterface_Target->I_HandleTargetAttacked(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
 }
 
 void AEnemyCharacter::I_RegenStamina()
 {
-	if(AttackInterface_Target && StaminaComponent)
+	if (AttackInterface_Target && StaminaComponent)
 		AttackInterface_Target->I_Target_RegenStamina(StaminaComponent->Stamina, StaminaComponent->MaxStamina);
+
 	if (EnemyAIController == nullptr)
 		return;
+
 	if (EnemyAIController->bIsRegenStamina)
 	{
 		if (I_HasEnoughStamina(EnemyAIController->TargetStamina))
@@ -107,7 +133,6 @@ void AEnemyCharacter::I_RequestAttackFail_Stamina(float StaminaCost)
 	if (EnemyAIController)
 		EnemyAIController->StartRegenStamina(StaminaCost);
 }
-
 
 void AEnemyCharacter::HandleTakePointDamage(AActor* DamagedActor, float Damage, AController* InstigatedBy, FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser)
 {
@@ -131,7 +156,4 @@ void AEnemyCharacter::HandlePlayerExitCombat()
 	if (EnemyAIController)
 		EnemyAIController->BackToPatrol();
 }
-
-
-
 
